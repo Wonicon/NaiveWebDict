@@ -9,20 +9,18 @@ class BingWord extends Word {
   }
 
   @Override
+  protected String URL(String word) {
+    return "http://cn.bing.com/dict/search?q=" + word;
+  }
+
+  @Override
   protected Elements getDefList(Document doc) {
-    Element element = doc.getElementsByClass("qdef").first();
-    return element.child(1).children();
+    return doc.getElementsByClass("qdef")
+              .first().child(1).children();
   }
 
   @Override
   protected Definition parseDef(Element li) {
-    Element pos_span = li.child(0);
-    Element def_span = li.child(1);
-    return new Definition(pos_span.text(), def_span.text());
-  }
-
-  @Override
-  protected String URL(String word) {
-    return "http://cn.bing.com/dict/search?q=" + word;
+    return new Definition(li.child(0).text(), li.child(1).text());
   }
 }

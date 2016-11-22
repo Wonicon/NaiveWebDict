@@ -1,8 +1,3 @@
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
-
 import java.io.IOException;
 import java.util.Scanner;
 
@@ -12,7 +7,9 @@ public class App {
     System.out.print("word: ");
     Word word = new BingWord().set(input.next());
     Word netEaseWord = new NetEaseWord().set(word.getWord());
+    Word baiduWord = new BaiduWord().set(word.getWord());
     System.out.println(word);
     System.out.println(netEaseWord);
+    System.out.println(baiduWord);
   }
 }

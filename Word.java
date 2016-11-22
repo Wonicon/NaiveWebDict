@@ -57,9 +57,9 @@ abstract class Word {
 
   public abstract String getSource();
 
-  protected abstract Definition parseDef(Element li);
+  protected abstract String URL(String word);
 
   protected abstract Elements getDefList(Document doc);
 
-  protected abstract String URL(String word);
+  protected abstract Definition parseDef(Element li);
 }
