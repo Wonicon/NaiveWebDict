@@ -48,7 +48,7 @@ abstract class Word {
 
   @Override
   public String toString() {
-    StringBuilder sb = new StringBuilder(word + "\n");
+    StringBuilder sb = new StringBuilder(word + " (" + getSource() + ")\n");
     for (Definition def : definitions) {
       sb.append(def.getPos()).append(" ").append(def.getDef()).append("\n");
     }

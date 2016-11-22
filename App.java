@@ -11,6 +11,8 @@ public class App {
     Scanner input = new Scanner(System.in);
     System.out.print("word: ");
     Word word = new BingWord().set(input.next());
+    Word netEaseWord = new NetEaseWord().set(word.getWord());
     System.out.println(word);
+    System.out.println(netEaseWord);
   }
 }
