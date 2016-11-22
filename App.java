@@ -5,11 +5,13 @@ public class App {
   public static void main(String[] args) throws IOException {
     Scanner input = new Scanner(System.in);
     System.out.print("word: ");
-    Word word = new BingWord().set(input.next());
-    Word netEaseWord = new NetEaseWord().set(word.getWord());
-    Word baiduWord = new BaiduWord().set(word.getWord());
+    long time = System.nanoTime();
+    Word word = new BingWord().query(input.next());
+    Word netEaseWord = new NetEaseWord().query(word.getWord());
+    Word baiduWord = new BaiduWord().query(word.getWord());
     System.out.println(word);
     System.out.println(netEaseWord);
     System.out.println(baiduWord);
+    System.out.println((System.nanoTime() - time) / 1000_000_000.0);
   }
 }
