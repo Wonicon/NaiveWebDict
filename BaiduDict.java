@@ -1,9 +1,8 @@
-import com.sun.org.apache.xerces.internal.dom.DeferredNotationImpl;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-public class BaiduWord extends Word {
+public class BaiduDict extends Dict {
   @Override
   public String getSource() {
     return "Baidu";

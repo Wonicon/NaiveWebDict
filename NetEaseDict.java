@@ -2,7 +2,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-public class NetEaseWord extends Word {
+public class NetEaseDict extends Dict {
   @Override
   public String getSource() {
     return "NetEase";

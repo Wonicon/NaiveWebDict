@@ -6,7 +6,7 @@ import org.jsoup.select.Elements;
 import java.io.IOException;
 import java.util.ArrayList;
 
-abstract class Word {
+abstract class Dict implements Runnable {
   private Definition[] definitions;
 
   private String word;
@@ -15,6 +15,13 @@ abstract class Word {
 
   public Definition getDefAt(int i) {
     return definitions[i];
+  }
+
+  public void setWord(String s) {
+    if (word == null || !s.equals(word)) {
+      word = s;
+      definitions = null;
+    }
   }
 
   public String getWord() {
@@ -35,21 +42,23 @@ abstract class Word {
   }
 
 
-  Word query(String word) {
+  Dict query() {
     time = System.nanoTime();
-    this.word = word;
+    assert(this.definitions == null);
     try {
       Document doc = Jsoup.connect(URL(word)).get();
       Elements defList = getDefList(doc);
       this.definitions = parseDefList(defList);
     } catch (IOException e) {
       System.out.println(e.toString());
+    } catch (NullPointerException e) {
+      System.err.println(word + " nof found from " + getSource());
     }
     time = System.nanoTime() - time;
     return this;
   }
 
-  Word() {
+  Dict() {
     definitions = null;
     word = null;
   }
@@ -57,10 +66,19 @@ abstract class Word {
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder(word + " (" + getSource() + ", " + getTime() + "s)\n");
-    for (Definition def : definitions) {
-      sb.append(def.getPos()).append(" ").append(def.getDef()).append("\n");
+    if (definitions != null) {
+      for (Definition def : definitions) {
+        sb.append(def.getPos()).append(" ").append(def.getDef()).append("\n");
+      }
+    } else {
+      sb.append("N/A\n");
     }
     return sb.toString();
+  }
+
+  @Override
+  public void run() {
+    query();
   }
 
   public abstract String getSource();
