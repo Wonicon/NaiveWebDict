@@ -4,6 +4,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 abstract class Word {
   private Definition[] definitions;
@@ -17,6 +18,16 @@ abstract class Word {
   public String getWord() {
     return word;
   }
+
+  private Definition[] parseDefList(Elements ul) {
+    ArrayList<Definition> defList = new ArrayList<>();
+    for (Element li = ul.first(); li != null; li = li.nextElementSibling()) {
+      Definition def = parseDef(li);
+      defList.add(def);
+    }
+    return defList.toArray(new Definition[defList.size()]);
+  }
+
 
   Word set(String word) {
     this.word = word;
@@ -47,8 +58,6 @@ abstract class Word {
   public abstract String getSource();
 
   protected abstract Definition parseDef(Element li);
-
-  protected abstract Definition[] parseDefList(Elements ul);
 
   protected abstract Elements getDefList(Document doc);
 
