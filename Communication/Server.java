@@ -30,6 +30,8 @@ public class Server {
     taskMap.put(CMD.register(), new RegisterTask());
     taskMap.put(CMD.login(), new LoginTask());
     taskMap.put(CMD.query(), new QueryTask());
+    taskMap.put(CMD.logout(), new LogoutTask());
+    taskMap.put(CMD.list(), new ListTask());
 
     ServerSocket socket = new ServerSocket(8000);
     while (!socket.isClosed()) {

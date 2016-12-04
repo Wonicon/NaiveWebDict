@@ -90,6 +90,20 @@ public class Client {
   }
 
   /**
+   * Log out an account
+   */
+  public static void logout() {
+    Socket socket = getSocket();
+    try {
+      DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+      out.writeUTF(CMD.logout());
+      out.writeUTF(token);
+    } catch (IOException e) {
+      System.err.println("Connection failed, cannot logout");
+    }
+  }
+
+  /**
    * Query a word and get 'like count'
    * The like count for multiple dictionary are managed like following:
    *   { "dict_name:count", ... }
@@ -117,6 +131,28 @@ public class Client {
     return results;
   }
 
+  public static String[] list() {
+    Socket socket = getSocket();
+    String[] results = null;
+
+    try {
+      DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+      DataInputStream in = new DataInputStream(socket.getInputStream());
+
+      out.writeUTF(CMD.list());
+
+      int n = in.readInt();
+      results = new String[n];
+      for (int i = 0; i < results.length; i++) {
+        results[i] = in.readUTF();
+      }
+    } catch (IOException e) {
+      System.err.println("List failed");
+    }
+
+    return results;
+  }
+
   public static void main(String[] args) throws Exception {
     Scanner input = new Scanner(System.in);
     while (input.hasNext()) {
@@ -129,8 +165,14 @@ public class Client {
       } else if (cmd.equals(CMD.login())) {
         System.out.println("login:" + login(arg[1], arg[2]));
       } else if (cmd.equals(CMD.query())) {
-        for (String s: query(arg[1])) {
+        for (String s : query(arg[1])) {
           System.out.println(s);
+        }
+      } else if (cmd.equals(CMD.logout())) {
+        logout();
+      } else if (cmd.equals(CMD.list())) {
+        for (String user: list()) {
+          System.out.println(user);
         }
       }
     }
