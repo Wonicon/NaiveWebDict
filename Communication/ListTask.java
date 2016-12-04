@@ -13,6 +13,7 @@ public class ListTask extends Task {
 
       // Send online user list
       DataOutputStream out = new DataOutputStream(conn.getOutputStream());
+      out.writeUTF(CMD.list());
       out.writeInt(list.length);
       for (String user: list) {
         out.writeUTF(user);

@@ -13,6 +13,7 @@ public class QueryTask extends Task {
       System.out.println(taskID + ".query.word: " + word);
       // TODO check username existence and password coherence.
       String[] results = { "A", "B", "C" };
+      out.writeUTF(CMD.query());
       out.writeInt(results.length);
       for (String s: results) {
         out.writeUTF(s);

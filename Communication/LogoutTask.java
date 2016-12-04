@@ -12,6 +12,8 @@ public class LogoutTask extends Task {
       Server.onlineUsersLock.lock();
       Server.onlineUsers.remove(username);
       Server.onlineUsersLock.unlock();
+      DataOutputStream out = new DataOutputStream(conn.getOutputStream());
+      out.writeUTF(CMD.logout());
     } catch (IOException e) {
       System.err.println("Failed to handle register for task " + taskID);
     }

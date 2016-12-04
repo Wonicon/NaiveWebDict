@@ -12,6 +12,7 @@ public class RegisterTask extends Task {
       System.out.println(taskID + ".register.username: " + username);
       System.out.println(taskID + ".register.password: " + password);
       // TODO check username collision.
+      out.writeUTF(CMD.register());
       out.writeBoolean(true);
     } catch (IOException e) {
       System.err.println("Failed to handle register task");

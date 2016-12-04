@@ -11,17 +11,20 @@ public class LoginTask extends Task {
       String password = in.readUTF();
       System.out.println(taskID + ".login.username: " + username);
       System.out.println(taskID + ".login.password: " + password);
+
       // TODO check username existence and password coherence.
+      String token = "...";
       Server.onlineUsersLock.lock();
-      if (Server.onlineUsers.contains(username)) {
-        Server.onlineUsersLock.unlock();
-        out.writeBoolean(false);
-      } else {
+      if (!Server.onlineUsers.contains(username)) {
         Server.onlineUsers.add(username);
-        Server.onlineUsersLock.unlock();
-        out.writeBoolean(true);
+        token = username;
       }
-    } catch (IOException e) {
+      Server.onlineUsersLock.unlock();
+
+      out.writeUTF(CMD.login());
+      out.writeUTF(token);
+    }
+    catch (IOException e) {
       System.err.println("Failed to handle register for task " + taskID);
     }
   }
