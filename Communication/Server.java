@@ -11,6 +11,11 @@ public class Server {
   static Map<String, Task> taskMap = new HashMap<>();
 
   /**
+   * Cache of users logged in.
+   */
+  static Set<String> onlineUsers = new TreeSet<>();
+
+  /**
    * Count of task, used to distinguish different tasks.
    */
   static int taskCount = 0;

@@ -116,11 +116,21 @@ public class Client {
   }
 
   public static void main(String[] args) throws Exception {
-    System.out.println("register:" + register(args[0], args[1]));
-    System.out.println("login:" + login(args[0], args[1]));
-    for (String s: query(new Scanner(System.in).next())) {
-      System.out.println(s);
+    Scanner input = new Scanner(System.in);
+    while (input.hasNext()) {
+      String[] arg = input.nextLine().split(" ");
+      String cmd = arg[0];
+
+      // Route to different request sender.
+      if (cmd.equals(CMD.register())) {
+        System.out.println("register:" + register(arg[1], arg[2]));
+      } else if (cmd.equals(CMD.login())) {
+        System.out.println("login:" + login(arg[1], arg[2]));
+      } else if (cmd.equals(CMD.query())) {
+        for (String s: query(arg[1])) {
+          System.out.println(s);
+        }
+      }
     }
-    getSocket().close();
   }
 }
