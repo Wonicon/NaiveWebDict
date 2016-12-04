@@ -4,13 +4,13 @@ import java.io.*;
 import java.net.*;
 
 public class RegisterTask extends Task {
-  void handle(Socket conn, DataInputStream in) {
+  void handle(int taskID, Socket conn, DataInputStream in) {
     try {
       DataOutputStream out = new DataOutputStream(conn.getOutputStream());
       String username = in.readUTF();
       String password = in.readUTF();
-      System.out.println("username: " + username);
-      System.out.println("password: " + password);
+      System.out.println(taskID + ".register.username: " + username);
+      System.out.println(taskID + ".register.password: " + password);
       // TODO check username collision.
       out.writeBoolean(true);
     } catch (IOException e) {

@@ -89,6 +89,11 @@ public class Client {
     return auth;
   }
 
+  /**
+   * Query a word and get definitions.
+   * @param word Word to query.
+   * @return Definitions.
+   */
   public static String[] query(String word) {
     Socket socket = getSocket();
     String[] results = null;
@@ -110,11 +115,12 @@ public class Client {
     return results;
   }
 
-  public static void main(String[] args) {
+  public static void main(String[] args) throws Exception {
     System.out.println("register:" + register(args[0], args[1]));
     System.out.println("login:" + login(args[0], args[1]));
     for (String s: query(new Scanner(System.in).next())) {
       System.out.println(s);
     }
+    getSocket().close();
   }
 }

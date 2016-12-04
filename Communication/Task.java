@@ -4,5 +4,5 @@ import java.net.*;
 import java.io.*;
 
 public abstract class Task {
-  abstract void handle(Socket conn, DataInputStream in);
+  abstract void handle(int taskID, Socket conn, DataInputStream in);
 }
