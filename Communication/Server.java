@@ -11,9 +11,19 @@ public class Server {
   static Set<String> onlineUsers = new TreeSet<>();
 
   /**
-   * The lock on onlineUsers
+   * The lock on onlineUsers.
    */
   static Lock onlineUsersLock = new ReentrantLock();
+
+  /**
+   * Collection of established sessions.
+   */
+  static List<Session> sessions = new LinkedList<>();
+
+  /**
+   * The lock on sessions.
+   */
+  static Lock sessionsLock = new ReentrantLock();
 
   /**
    * Count of task, used to distinguish different tasks.
@@ -24,8 +34,8 @@ public class Server {
     ServerSocket socket = new ServerSocket(8000);
     while (!socket.isClosed()) {
       System.out.println("wait connection");
-      Socket conn = socket.accept();
-      new Thread(new Session(conn, sessionCount++)).start();
+      Session session = new Session(socket.accept(), sessionCount++);
+      new Thread(session).start();
     }
     socket.close();
   }

@@ -20,4 +20,12 @@ public class CMD {
   public static String logout() {
     return "logout";
   }
+
+  public static String notifyLogin() {
+    return "notifyLogin";
+  }
+
+  public static String notifyLogout() {
+    return "notifyLogout";
+  }
 }

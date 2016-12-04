@@ -121,9 +121,14 @@ public class Client {
       System.out.println("receive cmd " + cmd);
       try {
         // TODO Handle push message.
-
+        if (cmd.equals(CMD.notifyLogin())) {
+          System.out.println(fromServer.readUTF() + " has logged in.");
+        }
+        else if (cmd.equals(CMD.notifyLogout())) {
+          System.out.println(fromServer.readUTF() + " has logged out.");
+        }
         // TODO Handle response message.
-        if (cmd.equals(CMD.register())) {
+        else if (cmd.equals(CMD.register())) {
           assert state == State.Register;
           boolean result = fromServer.readBoolean();
           System.out.println("registered: " + result);

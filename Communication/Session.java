@@ -75,6 +75,13 @@ class Session implements Runnable {
       if (!Server.onlineUsers.contains(username)) {
         Server.onlineUsers.add(username);
         token = username;
+        // TODO This is too coarse. Try to use queue.
+        Server.sessionsLock.lock();
+        for (Session s: Server.sessions) {
+          s.notifyLogin(username);
+        }
+        Server.sessions.add(this);
+        Server.sessionsLock.unlock();
       }
       Server.onlineUsersLock.unlock();
 
@@ -91,10 +98,19 @@ class Session implements Runnable {
       String username = fromClient.readUTF();
       System.out.println(sessionID + ".logout.username: " + username);
       // TODO check username existence and password coherence.
+      toClient.writeUTF(CMD.logout());
+      // Update online user list
       Server.onlineUsersLock.lock();
       Server.onlineUsers.remove(username);
       Server.onlineUsersLock.unlock();
-      toClient.writeUTF(CMD.logout());
+      // Update sessions
+      Server.sessionsLock.lock();
+      Server.sessions.remove(this);
+      for (Session s: Server.sessions) {
+        s.notifyLogout(username);
+      }
+      Server.sessionsLock.unlock();
+
     } catch (IOException e) {
       System.err.println("Failed to handle register for session " + sessionID);
     }
@@ -133,6 +149,34 @@ class Session implements Runnable {
       }
     } catch (IOException e) {
       System.err.println("Failed to handle register for session " + sessionID);
+    }
+  }
+
+  private void notifyLogin(String newUser) {
+    outLock.lock();
+    try {
+      toClient.writeUTF(CMD.notifyLogin());
+      toClient.writeUTF(newUser);
+    }
+    catch (IOException e) {
+      System.err.println("Failed to notify session " + sessionID);
+    }
+    finally {
+      outLock.unlock();
+    }
+  }
+
+  private void notifyLogout(String leavingUser) {
+    outLock.lock();
+    try {
+      toClient.writeUTF(CMD.notifyLogout());
+      toClient.writeUTF(leavingUser);
+    }
+    catch (IOException e) {
+      System.err.println("Failed to notify session " + sessionID);
+    }
+    finally {
+      outLock.unlock();
     }
   }
 
