@@ -90,9 +90,11 @@ public class Client {
   }
 
   /**
-   * Query a word and get definitions.
+   * Query a word and get 'like count'
+   * The like count for multiple dictionary are managed like following:
+   *   { "dict_name:count", ... }
    * @param word Word to query.
-   * @return Definitions.
+   * @return like counts, in specific format.
    */
   public static String[] query(String word) {
     Socket socket = getSocket();

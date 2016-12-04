@@ -12,7 +12,15 @@ public class LoginTask extends Task {
       System.out.println(taskID + ".login.username: " + username);
       System.out.println(taskID + ".login.password: " + password);
       // TODO check username existence and password coherence.
-      out.writeBoolean(true);
+      Server.onlineUsersLock.lock();
+      if (Server.onlineUsers.contains(username)) {
+        Server.onlineUsersLock.unlock();
+        out.writeBoolean(false);
+      } else {
+        Server.onlineUsers.add(username);
+        Server.onlineUsersLock.unlock();
+        out.writeBoolean(true);
+      }
     } catch (IOException e) {
       System.err.println("Failed to handle register for task " + taskID);
     }

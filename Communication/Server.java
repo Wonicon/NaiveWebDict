@@ -3,6 +3,7 @@ package Communication;
 import java.net.*;
 import java.io.*;
 import java.util.*;
+import java.util.concurrent.locks.*;
 
 public class Server {
   /**
@@ -14,6 +15,11 @@ public class Server {
    * Cache of users logged in.
    */
   static Set<String> onlineUsers = new TreeSet<>();
+
+  /**
+   * The lock on onlineUsers
+   */
+  static Lock onlineUsersLock = new ReentrantLock();
 
   /**
    * Count of task, used to distinguish different tasks.
