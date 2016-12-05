@@ -10,35 +10,33 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class Client {
+  private String username = "";
+
+  private int uid = 0;
+
   /**
    * The global connection socket.
    */
-  private static Socket socket = null;
+  private Socket socket = null;
 
-  private static DataInputStream fromServer;
+  private DataInputStream fromServer;
 
-  private static DataOutputStream toServer;
+  private DataOutputStream toServer;
 
   private enum State {
     Start, Register, Login, Logout, Query, List, Online
   }
 
-  static volatile State state = State.Start;
+  private volatile State state = State.Start;
 
-  static Lock stateLock = new ReentrantLock();
+  private Lock stateLock = new ReentrantLock();
 
-  static Condition response = stateLock.newCondition();
-
-  /**
-   * The unique token to check whether the client is authenticated.
-   * Currently it is the unique username.
-   */
-  private static String token = "...";
+  private Condition response = stateLock.newCondition();
 
   /**
    * Not allow instantiation.
    */
-  private Client() {
+  public Client() {
   }
 
   /**
@@ -47,8 +45,7 @@ public class Client {
    * @param username Username
    * @param password Password
    */
-  public static void register(String username, String password) {
-    Boolean auth = false;
+  public void register(String username, String password) {
     try {
       toServer.writeUTF(CMD.register());
       toServer.writeUTF(username);
@@ -64,10 +61,10 @@ public class Client {
    *
    * @param username Username
    * @param password Password
-   * @return True if the authentication is successful, false otherwise.
    */
-  public static void login(String username, String password) {
+  public void login(String username, String password) {
     try {
+      this.username = username;
       toServer.writeUTF(CMD.login());
       toServer.writeUTF(username);
       toServer.writeUTF(password);
@@ -80,11 +77,11 @@ public class Client {
   /**
    * Log out an account
    */
-  public static void logout() {
+  public void logout() {
     try {
       DataOutputStream out = new DataOutputStream(socket.getOutputStream());
       out.writeUTF(CMD.logout());
-      out.writeUTF(token);
+      out.writeInt(uid);
     }
     catch (IOException e) {
       System.err.println("Failed to send logout request");
@@ -98,11 +95,11 @@ public class Client {
    *
    * @param word Word to query.
    */
-  public static void query(String word) {
+  public void query(String word) {
     String[] results = null;
     try {
       toServer.writeUTF(CMD.query());
-      toServer.writeUTF(token);
+      toServer.writeInt(uid);
       toServer.writeUTF(word);
     }
     catch (IOException e) {
@@ -110,7 +107,7 @@ public class Client {
     }
   }
 
-  public static void list() {
+  public void list() {
     try {
       toServer.writeUTF(CMD.list());
     }
@@ -119,7 +116,7 @@ public class Client {
     }
   }
 
-  public static void serverMsgHandler() {
+  public void serverMsgHandler() {
     String cmd;
     while (true) {
       try {
@@ -150,9 +147,14 @@ public class Client {
         }
         else if (cmd.equals(CMD.login())) {
           assert state == State.Login;
-          String result = fromServer.readUTF();
-          System.out.println("login as " + result);
-          token = result;
+          uid = fromServer.readInt();
+          if (uid > 0) {
+            System.out.println("login as " + username);
+          }
+          else {
+            System.out.println("login failed");
+            username = "";
+          }
           state = State.Online;
           response.signal();
         }
@@ -190,7 +192,7 @@ public class Client {
     }
   }
 
-  public static void main(String[] args) throws Exception {
+  public void run() {
     // Establish connection and create stream.
     try {
       socket = new Socket("localhost", 8000);
@@ -201,10 +203,10 @@ public class Client {
       System.err.println("Connection failed");
     }
 
-    Thread handler = new Thread(Client::serverMsgHandler);
+    Thread handler = new Thread(this::serverMsgHandler);
     handler.start();
 
-    System.out.print(token + "> ");
+    System.out.print(username + "> ");
     Scanner input = new Scanner(System.in);
     while (input.hasNext()) {
       stateLock.lock();
@@ -218,8 +220,13 @@ public class Client {
           state = State.Register;
         }
         else if (cmd.equals(CMD.login())) {
-          login(arg[1], arg[2]);
-          state = State.Login;
+          if (state != State.Online) {
+            login(arg[1], arg[2]);
+            state = State.Login;
+          }
+          else {
+            System.out.println("logout first!");
+          }
         }
         else if (cmd.equals(CMD.query())) {
           query(arg[1]);
@@ -234,18 +241,32 @@ public class Client {
           state = State.List;
         }
 
-        State old = state;
-        while (state == old) {
-          response.await();
+        if (state != State.Start && state != State.Online) {
+          State old = state;
+          while (state == old) {
+            response.await();
+          }
         }
+      }
+      catch (InterruptedException e) {
+        System.err.println(e.toString());
       }
       finally {
         stateLock.unlock();
       }
 
-      System.out.print(token + "> ");
+      System.out.print(username + "> ");
     }
 
-    handler.join();
+    try {
+      handler.join();
+    }
+    catch (InterruptedException e) {
+      System.err.println(e.toString());
+    }
+  }
+
+  public static void main(String[] args) throws Exception {
+    new Client().run();
   }
 }

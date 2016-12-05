@@ -15,6 +15,14 @@ import java.util.concurrent.locks.ReentrantLock;
  * maintaining synchronizing lock and handling request from client.
  */
 class Session implements Runnable {
+  private enum State { OFFLINE, ONLINE };
+
+  private State state = State.OFFLINE;
+
+  private String username = "";
+
+  private int uid;
+
   private Socket socket;
 
   private DataInputStream fromClient;
@@ -50,17 +58,11 @@ class Session implements Runnable {
 
   private void register() {
     try {
-      // Get online user list
-      Server.onlineUsersLock.lock();
-      String[] list = Server.onlineUsers.toArray(new String[Server.onlineUsers.size()]);
-      Server.onlineUsersLock.unlock();
-
-      // Send online user list
-      toClient.writeUTF(CMD.list());
-      toClient.writeInt(list.length);
-      for (String user : list) {
-        toClient.writeUTF(user);
-      }
+      String username = fromClient.readUTF();
+      String password = fromClient.readUTF();
+      System.out.println("Session" + sessionID + ":register:" +  username + "&" + password);
+      toClient.writeUTF(CMD.register());
+      toClient.writeBoolean(Server.db.register(username, password));
     }
     catch (IOException e) {
       System.err.println("Failed to handle register for session " + sessionID);
@@ -69,29 +71,35 @@ class Session implements Runnable {
 
   private void login() {
     try {
+      int result;
+
       String username = fromClient.readUTF();
       String password = fromClient.readUTF();
-      System.out.println(sessionID + ".login.username: " + username);
-      System.out.println(sessionID + ".login.password: " + password);
 
-      // TODO check username existence and password coherence.
-      String token = "...";
-      Server.onlineUsersLock.lock();
-      if (!Server.onlineUsers.contains(username)) {
-        Server.onlineUsers.add(username);
-        token = username;
-        // TODO This is too coarse. Try to use queue.
-        Server.sessionsLock.lock();
-        for (Session s : Server.sessions) {
-          s.notifyLogin(username);
+      if (state != State.ONLINE) {
+        System.out.println(sessionID + ":login:" + username + "&" + password);
+        // Check username existence and password coherence and then get the uid.
+        result = uid = Server.db.login(username, password);
+        // Allow logged-in user to receive pushing message from server.
+        if (uid > 0) {
+          // TODO This is too coarse. Try to use queue.
+          this.username = username;
+          state = State.ONLINE;
+          Server.sessionsLock.lock();
+          for (Session s : Server.sessions) {
+            s.notifyLogin(username);
+          }
+          Server.sessions.add(this);
+          Server.sessionsLock.unlock();
         }
-        Server.sessions.add(this);
-        Server.sessionsLock.unlock();
       }
-      Server.onlineUsersLock.unlock();
-
+      else {
+        System.out.println(sessionID + ":login:duplicated");
+        result = -1;
+      }
+      // Send response message.
       toClient.writeUTF(CMD.login());
-      toClient.writeUTF(token);
+      toClient.writeInt(result);
     }
     catch (IOException e) {
       System.err.println("Failed to handle register for task " + sessionID);
@@ -100,22 +108,23 @@ class Session implements Runnable {
 
   private void logout() {
     try {
-      String username = fromClient.readUTF();
-      System.out.println(sessionID + ".logout.username: " + username);
-      // TODO check username existence and password coherence.
-      toClient.writeUTF(CMD.logout());
-      // Update online user list
-      Server.onlineUsersLock.lock();
-      Server.onlineUsers.remove(username);
-      Server.onlineUsersLock.unlock();
-      // Update sessions
-      Server.sessionsLock.lock();
-      Server.sessions.remove(this);
-      for (Session s : Server.sessions) {
-        s.notifyLogout(username);
+      int uid = fromClient.readInt();
+      if (state == State.ONLINE) {
+        System.out.println(sessionID + ":logout:uid" + uid);
+        Server.db.logout(uid);
+        // Update sessions
+        Server.sessionsLock.lock();
+        Server.sessions.remove(this);
+        for (Session s : Server.sessions) {
+          s.notifyLogout(username);
+        }
+        Server.sessionsLock.unlock();
+        state = State.OFFLINE;
       }
-      Server.sessionsLock.unlock();
-
+      else {
+        System.out.println("Session" + sessionID + ": invalid logout request.");
+      }
+      toClient.writeUTF(CMD.logout());
     }
     catch (IOException e) {
       System.err.println("Failed to handle register for session " + sessionID);
@@ -141,13 +150,12 @@ class Session implements Runnable {
     }
   }
 
+  /**
+   * TODO use database to get online list.
+   */
   private void list() {
     try {
-      // Get online user list
-      Server.onlineUsersLock.lock();
-      String[] list = Server.onlineUsers.toArray(new String[Server.onlineUsers.size()]);
-      Server.onlineUsersLock.unlock();
-
+      String[] list = null;
       // Send online user list
       toClient.writeUTF(CMD.list());
       toClient.writeInt(list.length);
@@ -202,7 +210,7 @@ class Session implements Runnable {
         }
       }
       catch (IOException e) {
-        System.err.println("Session " + sessionID + ": failed to communicate");
+        System.err.println("Session " + sessionID + " failed to communicate: " + e.toString());
         break;
       }
     }

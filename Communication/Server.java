@@ -10,16 +10,6 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class Server {
   /**
-   * Cache of users logged in.
-   */
-  static Set<String> onlineUsers = new TreeSet<>();
-
-  /**
-   * The lock on onlineUsers.
-   */
-  static Lock onlineUsersLock = new ReentrantLock();
-
-  /**
    * Collection of established sessions.
    */
   static List<Session> sessions = new LinkedList<>();
@@ -29,12 +19,15 @@ public class Server {
    */
   static Lock sessionsLock = new ReentrantLock();
 
+  static DB.Database db;
+
   /**
    * Count of task, used to distinguish different tasks.
    */
   private static int sessionCount = 0;
 
   public static void main(String[] args) throws Exception {
+    db = new DB.Database(args[0], args[1]);
     ServerSocket socket = new ServerSocket(8000);
     while (!socket.isClosed()) {
       System.out.println("wait connection");
