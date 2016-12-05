@@ -233,8 +233,13 @@ public class Client {
           state = State.Query;
         }
         else if (cmd.equals(CMD.logout())) {
-          logout();
-          state = State.Logout;
+          if (state == State.Online) {
+            logout();
+            state = State.Logout;
+          }
+          else {
+            System.out.println("login first!");
+          }
         }
         else if (cmd.equals(CMD.list())) {
           list();
