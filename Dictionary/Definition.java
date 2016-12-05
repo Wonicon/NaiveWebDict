@@ -1,3 +1,5 @@
+package Dictionary;
+
 /**
  * The definition for a word.
  */

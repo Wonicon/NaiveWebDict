@@ -1,3 +1,5 @@
+package Dictionary;
+
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -44,14 +46,16 @@ abstract class Dict implements Runnable {
 
   Dict query() {
     time = System.nanoTime();
-    assert(this.definitions == null);
+    assert (this.definitions == null);
     try {
       Document doc = Jsoup.connect(URL(word)).get();
       Elements defList = getDefList(doc);
       this.definitions = parseDefList(defList);
-    } catch (IOException e) {
+    }
+    catch (IOException e) {
       System.out.println(e.toString());
-    } catch (NullPointerException e) {
+    }
+    catch (NullPointerException e) {
       System.err.println(word + " nof found from " + getSource());
     }
     time = System.nanoTime() - time;
@@ -70,7 +74,8 @@ abstract class Dict implements Runnable {
       for (Definition def : definitions) {
         sb.append(def.getPos()).append(" ").append(def.getDef()).append("\n");
       }
-    } else {
+    }
+    else {
       sb.append("N/A\n");
     }
     return sb.toString();

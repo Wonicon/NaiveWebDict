@@ -1,9 +1,13 @@
 package Communication;
 
-import java.io.*;
-import java.net.*;
-import java.util.*;
-import java.util.concurrent.locks.*;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.net.Socket;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Session class refers to a specific connection to client.
@@ -54,10 +58,11 @@ class Session implements Runnable {
       // Send online user list
       toClient.writeUTF(CMD.list());
       toClient.writeInt(list.length);
-      for (String user: list) {
+      for (String user : list) {
         toClient.writeUTF(user);
       }
-    } catch (IOException e) {
+    }
+    catch (IOException e) {
       System.err.println("Failed to handle register for session " + sessionID);
     }
   }
@@ -77,7 +82,7 @@ class Session implements Runnable {
         token = username;
         // TODO This is too coarse. Try to use queue.
         Server.sessionsLock.lock();
-        for (Session s: Server.sessions) {
+        for (Session s : Server.sessions) {
           s.notifyLogin(username);
         }
         Server.sessions.add(this);
@@ -106,12 +111,13 @@ class Session implements Runnable {
       // Update sessions
       Server.sessionsLock.lock();
       Server.sessions.remove(this);
-      for (Session s: Server.sessions) {
+      for (Session s : Server.sessions) {
         s.notifyLogout(username);
       }
       Server.sessionsLock.unlock();
 
-    } catch (IOException e) {
+    }
+    catch (IOException e) {
       System.err.println("Failed to handle register for session " + sessionID);
     }
   }
@@ -123,13 +129,14 @@ class Session implements Runnable {
       System.out.println(sessionID + ".query.username: " + username);
       System.out.println(sessionID + ".query.word: " + word);
       // TODO check username existence and password coherence.
-      String[] results = { "A", "B", "C" };
+      String[] results = {"A", "B", "C"};
       toClient.writeUTF(CMD.query());
       toClient.writeInt(results.length);
-      for (String s: results) {
+      for (String s : results) {
         toClient.writeUTF(s);
       }
-    } catch (IOException e) {
+    }
+    catch (IOException e) {
       System.err.println("Failed to handle register task");
     }
   }
@@ -144,10 +151,11 @@ class Session implements Runnable {
       // Send online user list
       toClient.writeUTF(CMD.list());
       toClient.writeInt(list.length);
-      for (String user: list) {
+      for (String user : list) {
         toClient.writeUTF(user);
       }
-    } catch (IOException e) {
+    }
+    catch (IOException e) {
       System.err.println("Failed to handle register for session " + sessionID);
     }
   }

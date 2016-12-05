@@ -1,3 +1,3 @@
 Dependency: Jsoup
 
-Entrance: App
+Entrance: Dictionary.App

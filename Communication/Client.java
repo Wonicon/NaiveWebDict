@@ -1,9 +1,13 @@
 package Communication;
 
-import java.net.*;
-import java.io.*;
-import java.util.*;
-import java.util.concurrent.locks.*;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.net.Socket;
+import java.util.Scanner;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class Client {
   /**
@@ -34,10 +38,12 @@ public class Client {
   /**
    * Not allow instantiation.
    */
-  private Client() {}
+  private Client() {
+  }
 
   /**
    * Register an account. Auto login.
+   *
    * @param username Username
    * @param password Password
    */
@@ -47,13 +53,15 @@ public class Client {
       toServer.writeUTF(CMD.register());
       toServer.writeUTF(username);
       toServer.writeUTF(password);
-    } catch (IOException e) {
+    }
+    catch (IOException e) {
       System.err.println("Failed to send register request");
     }
   }
 
   /**
    * Log into an account
+   *
    * @param username Username
    * @param password Password
    * @return True if the authentication is successful, false otherwise.
@@ -63,7 +71,8 @@ public class Client {
       toServer.writeUTF(CMD.login());
       toServer.writeUTF(username);
       toServer.writeUTF(password);
-    } catch (IOException e) {
+    }
+    catch (IOException e) {
       System.err.println("Failed to send login request");
     }
   }
@@ -76,7 +85,8 @@ public class Client {
       DataOutputStream out = new DataOutputStream(socket.getOutputStream());
       out.writeUTF(CMD.logout());
       out.writeUTF(token);
-    } catch (IOException e) {
+    }
+    catch (IOException e) {
       System.err.println("Failed to send logout request");
     }
   }
@@ -84,7 +94,8 @@ public class Client {
   /**
    * Query a word and get 'like count'
    * The like count for multiple dictionary are managed like following:
-   *   { "dict_name:count", ... }
+   * { "dict_name:count", ... }
+   *
    * @param word Word to query.
    */
   public static void query(String word) {
@@ -93,7 +104,8 @@ public class Client {
       toServer.writeUTF(CMD.query());
       toServer.writeUTF(token);
       toServer.writeUTF(word);
-    } catch (IOException e) {
+    }
+    catch (IOException e) {
       System.err.println("Failed to send query request");
     }
   }
@@ -101,7 +113,8 @@ public class Client {
   public static void list() {
     try {
       toServer.writeUTF(CMD.list());
-    } catch (IOException e) {
+    }
+    catch (IOException e) {
       System.err.println("Failed to send list request");
     }
   }
@@ -183,7 +196,8 @@ public class Client {
       socket = new Socket("localhost", 8000);
       fromServer = new DataInputStream(socket.getInputStream());
       toServer = new DataOutputStream(socket.getOutputStream());
-    } catch (IOException e) {
+    }
+    catch (IOException e) {
       System.err.println("Connection failed");
     }
 

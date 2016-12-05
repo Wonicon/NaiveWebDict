@@ -1,3 +1,5 @@
+package Dictionary;
+
 import java.util.Scanner;
 
 public class App {
