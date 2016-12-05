@@ -3,6 +3,7 @@ package Communication;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.Serializable;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
@@ -21,7 +22,7 @@ class Session implements Runnable {
 
   private String username = "";
 
-  private int uid;
+  private int uid = 0;
 
   private Socket socket;
 
@@ -61,8 +62,15 @@ class Session implements Runnable {
       String username = fromClient.readUTF();
       String password = fromClient.readUTF();
       System.out.println("Session" + sessionID + ":register:" +  username + "&" + password);
-      toClient.writeUTF(CMD.register());
-      toClient.writeBoolean(Server.db.register(username, password));
+
+      outLock.lock();
+      try {
+        toClient.writeUTF(CMD.register());
+        toClient.writeBoolean(Server.db.register(username, password));
+      }
+      finally {
+        outLock.unlock();
+      }
     }
     catch (IOException e) {
       System.err.println("Failed to handle register for session " + sessionID);
@@ -97,9 +105,16 @@ class Session implements Runnable {
         System.out.println(sessionID + ":login:duplicated");
         result = -1;
       }
+
       // Send response message.
-      toClient.writeUTF(CMD.login());
-      toClient.writeInt(result);
+      outLock.lock();
+      try {
+        toClient.writeUTF(CMD.login());
+        toClient.writeInt(result);
+      }
+      finally {
+        outLock.unlock();
+      }
     }
     catch (IOException e) {
       System.err.println("Failed to handle register for task " + sessionID);
@@ -124,7 +139,14 @@ class Session implements Runnable {
       else {
         System.out.println("Session" + sessionID + ": invalid logout request.");
       }
-      toClient.writeUTF(CMD.logout());
+
+      outLock.lock();
+      try {
+        toClient.writeUTF(CMD.logout());
+      }
+      finally {
+        outLock.unlock();
+      }
     }
     catch (IOException e) {
       System.err.println("Failed to handle register for session " + sessionID);
@@ -139,10 +161,16 @@ class Session implements Runnable {
       System.out.println(sessionID + ".query.word: " + word);
       // TODO check username existence and password coherence.
       String[] results = {"A", "B", "C"};
-      toClient.writeUTF(CMD.query());
-      toClient.writeInt(results.length);
-      for (String s : results) {
-        toClient.writeUTF(s);
+      outLock.lock();
+      try {
+        toClient.writeUTF(CMD.query());
+        toClient.writeInt(results.length);
+        for (String s : results) {
+          toClient.writeUTF(s);
+        }
+      }
+      finally {
+        outLock.unlock();
       }
     }
     catch (IOException e) {
@@ -151,11 +179,29 @@ class Session implements Runnable {
   }
 
   /**
-   * TODO use database to get online list.
+   * Retrieve the current online users' username from <code>Server.sessions</code> collection.
+   * This method is not thread safe, guard it with synchronizing lock.
+   * @return The array of online username.
    */
+  private String[] getOnlineList() {
+    String[] users;
+    users = new String[Server.sessions.size()];
+    int i = 0;
+    for (Session session : Server.sessions) {
+      users[i++] = session.username;
+      assert session.uid > 0;
+    }
+    return users;
+  }
+
+
   private void list() {
+    Server.sessionsLock.lock();
+    String[] list = getOnlineList();
+    Server.sessionsLock.unlock();
+
+    outLock.lock();
     try {
-      String[] list = null;
       // Send online user list
       toClient.writeUTF(CMD.list());
       toClient.writeInt(list.length);
@@ -165,6 +211,9 @@ class Session implements Runnable {
     }
     catch (IOException e) {
       System.err.println("Failed to handle register for session " + sessionID);
+    }
+    finally {
+      outLock.unlock();
     }
   }
 
