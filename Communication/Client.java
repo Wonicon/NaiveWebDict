@@ -12,7 +12,31 @@ import java.util.concurrent.locks.ReentrantLock;
 public class Client {
   private String username = "";
 
+  public String getUsername() { return username; }
+
   private int uid = 0;
+
+  /**
+   * Notify the <code>serverMsgHandler</code> thread to stop.
+   */
+  private volatile boolean shutdown = false;
+
+  /**
+   * Method for users to shutdown the client elegantly.
+   */
+  public void stop() {
+    shutdown = true;
+
+    // It is practical to stop the listener thread by close the socket.
+    // As it might stall on read from stream, the loop boolean value may not work.
+    try {
+      socket.close();
+    }
+    catch (IOException e) {
+      System.err.println(e.toString());
+    }
+  }
+
 
   /**
    * The global connection socket.
@@ -33,12 +57,37 @@ public class Client {
 
   private Lock stateLock = new ReentrantLock();
 
+  public void lock() { stateLock.lock(); }
+
+  public void unlock() { stateLock.unlock(); }
+
   private Condition response = stateLock.newCondition();
 
+  public void await() {
+    try {
+      response.await();
+    }
+    catch (InterruptedException e) {
+      System.err.println(e.toString());
+    }
+  }
+
   /**
-   * Not allow instantiation.
+   * Connect to server while starting.
+   * And create the listening thread.
    */
   public Client() {
+    // Establish connection and create stream.
+    try {
+      socket = new Socket("localhost", 8000);
+      fromServer = new DataInputStream(socket.getInputStream());
+      toServer = new DataOutputStream(socket.getOutputStream());
+    }
+    catch (IOException e) {
+      System.err.println("Connection failed");
+    }
+
+    new Thread(this::serverMsgHandler).start();
   }
 
   /**
@@ -145,9 +194,12 @@ public class Client {
     }
   }
 
+  /**
+   * This method acts as a stand-alone thread to receive server's pushing messages and responses.
+   */
   public void serverMsgHandler() {
     String cmd;
-    while (true) {
+    while (!shutdown) {
       try {
         cmd = fromServer.readUTF();
       }
@@ -222,21 +274,10 @@ public class Client {
     }
   }
 
-  public void run() {
-    // Establish connection and create stream.
-    try {
-      socket = new Socket("localhost", 8000);
-      fromServer = new DataInputStream(socket.getInputStream());
-      toServer = new DataOutputStream(socket.getOutputStream());
-    }
-    catch (IOException e) {
-      System.err.println("Connection failed");
-    }
+  public static void main(String[] args) throws Exception {
+    Client inst = new Client();
 
-    Thread handler = new Thread(this::serverMsgHandler);
-    handler.start();
-
-    System.out.print(username + "> ");
+    System.out.print(inst.username + "> ");
     Scanner input = new Scanner(System.in);
     while (input.hasNext()) {
       String[] arg = input.nextLine().split(" ");
@@ -244,49 +285,31 @@ public class Client {
 
       // Route to different request sender.
       if (cmd.equals(CMD.register())) {
-        register(arg[1], arg[2]);
+        inst.register(arg[1], arg[2]);
       }
       else if (cmd.equals(CMD.login())) {
-        login(arg[1], arg[2]);
+        inst.login(arg[1], arg[2]);
       }
       else if (cmd.equals(CMD.query())) {
-        query(arg[1]);
+        inst.query(arg[1]);
       }
       else if (cmd.equals(CMD.logout())) {
-        logout();
+        inst.logout();
       }
       else if (cmd.equals(CMD.list())) {
-        list();
+        inst.list();
       }
 
-      stateLock.lock();
-      try {
-        if (state != State.Start && state != State.Online) {
-          State old = state;
-          while (state == old) {
-            response.await();
-          }
+      inst.lock();
+      if (inst.getState() != State.Start && inst.getState() != State.Online) {
+        State old = inst.getState();
+        while (inst.getState() == old) {
+          inst.await();
         }
       }
-      catch (InterruptedException e) {
-        System.err.println(e.toString());
-      }
-      finally {
-        stateLock.unlock();
-      }
+      inst.unlock();
 
-      System.out.print(username + "> ");
+      System.out.print(inst.username + "> ");
     }
-
-    try {
-      handler.join();
-    }
-    catch (InterruptedException e) {
-      System.err.println(e.toString());
-    }
-  }
-
-  public static void main(String[] args) throws Exception {
-    new Client().run();
   }
 }
