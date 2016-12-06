@@ -48,7 +48,7 @@ public class Client {
   private DataOutputStream toServer;
 
   public enum State {
-    Start, Register, Login, Logout, Query, List, Online
+    Start, Register, Login, Logout, Query, List, Like, Online
   }
 
   private volatile State state = State.Start;
@@ -100,7 +100,7 @@ public class Client {
     stateLock.lock();
     try {
       if (state == State.Start) {
-        toServer.writeUTF(CMD.register());
+        toServer.writeUTF(Message.register());
         toServer.writeUTF(username);
         toServer.writeUTF(password);
         state = State.Register;
@@ -127,7 +127,7 @@ public class Client {
     stateLock.lock();
     try {
       if (state == State.Start) {
-        toServer.writeUTF(CMD.login());
+        toServer.writeUTF(Message.login());
         toServer.writeUTF(username);
         toServer.writeUTF(password);
         this.username = username;
@@ -152,7 +152,7 @@ public class Client {
     stateLock.lock();
     try {
       if (state == State.Online) {
-        toServer.writeUTF(CMD.logout());
+        toServer.writeUTF(Message.logout());
         state = State.Logout;
       }
       else {
@@ -183,7 +183,7 @@ public class Client {
   public void list() {
     stateLock.lock();
     try {
-      toServer.writeUTF(CMD.list());
+      toServer.writeUTF(Message.list());
       state = State.List;
     }
     catch (IOException e) {
@@ -194,10 +194,27 @@ public class Client {
     }
   }
 
+  public void like(String word, int dict) {
+    stateLock.lock();
+    try {
+      toServer.writeUTF(Message.like());
+      toServer.writeUTF(word);
+      toServer.writeInt(uid);
+      toServer.writeInt(dict);
+      state = State.Like;
+    }
+    catch (IOException e) {
+      System.err.println(e.toString());
+    }
+    finally {
+      stateLock.unlock();
+    }
+  }
+
   /**
    * This method acts as a stand-alone thread to receive server's pushing messages and responses.
    */
-  public void serverMsgHandler() {
+  private void serverMsgHandler() {
     String cmd;
     while (!shutdown) {
       try {
@@ -212,21 +229,21 @@ public class Client {
       System.out.println("receive cmd " + cmd);
       try {
         // TODO Handle push message.
-        if (cmd.equals(CMD.notifyLogin())) {
+        if (cmd.equals(Message.notifyLogin())) {
           System.out.println(fromServer.readUTF() + " has logged in.");
         }
-        else if (cmd.equals(CMD.notifyLogout())) {
+        else if (cmd.equals(Message.notifyLogout())) {
           System.out.println(fromServer.readUTF() + " has logged out.");
         }
         // TODO Handle response message.
-        else if (cmd.equals(CMD.register())) {
+        else if (cmd.equals(Message.register())) {
           assert state == State.Register;
           boolean result = fromServer.readBoolean();
           System.out.println("registered: " + result);
           state = State.Start;
           response.signal();
         }
-        else if (cmd.equals(CMD.login())) {
+        else if (cmd.equals(Message.login())) {
           assert state == State.Login;
           uid = fromServer.readInt();
           if (uid > 0) {
@@ -240,12 +257,12 @@ public class Client {
           }
           response.signal();
         }
-        else if (cmd.equals(CMD.logout())) {
+        else if (cmd.equals(Message.logout())) {
           assert state == State.Logout;
           state = State.Start;
           response.signal();
         }
-        else if (cmd.equals(CMD.query())) {
+        else if (cmd.equals(Message.query())) {
           assert state == State.Query;
           int n = fromServer.readInt();
           for (int i = 0; i < n; i++) {
@@ -254,7 +271,7 @@ public class Client {
           state = State.Online;
           response.signal();
         }
-        else if (cmd.equals(CMD.list())) {
+        else if (cmd.equals(Message.list())) {
           assert state == State.List;
           int n = fromServer.readInt();
           for (int i = 0; i < n; i++) {
@@ -284,19 +301,19 @@ public class Client {
       String cmd = arg[0];
 
       // Route to different request sender.
-      if (cmd.equals(CMD.register())) {
+      if (cmd.equals(Message.register())) {
         inst.register(arg[1], arg[2]);
       }
-      else if (cmd.equals(CMD.login())) {
+      else if (cmd.equals(Message.login())) {
         inst.login(arg[1], arg[2]);
       }
-      else if (cmd.equals(CMD.query())) {
+      else if (cmd.equals(Message.query())) {
         inst.query(arg[1]);
       }
-      else if (cmd.equals(CMD.logout())) {
+      else if (cmd.equals(Message.logout())) {
         inst.logout();
       }
-      else if (cmd.equals(CMD.list())) {
+      else if (cmd.equals(Message.list())) {
         inst.list();
       }
 

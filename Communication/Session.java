@@ -3,7 +3,6 @@ package Communication;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.Serializable;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
@@ -50,11 +49,12 @@ class Session implements Runnable {
       System.err.println("Session " + sessionID + ": cannot get in/out stream.");
     }
 
-    handlerMap.put(CMD.register(), this::register);
-    handlerMap.put(CMD.login(), this::login);
-    handlerMap.put(CMD.query(), this::query);
-    handlerMap.put(CMD.logout(), this::logout);
-    handlerMap.put(CMD.list(), this::list);
+    handlerMap.put(Message.register(), this::register);
+    handlerMap.put(Message.login(), this::login);
+    handlerMap.put(Message.query(), this::query);
+    handlerMap.put(Message.logout(), this::logout);
+    handlerMap.put(Message.list(), this::list);
+    handlerMap.put(Message.like(), this::like);
   }
 
   private void register() {
@@ -65,7 +65,7 @@ class Session implements Runnable {
 
       outLock.lock();
       try {
-        toClient.writeUTF(CMD.register());
+        toClient.writeUTF(Message.register());
         toClient.writeBoolean(Server.db.register(username, password));
       }
       finally {
@@ -109,7 +109,7 @@ class Session implements Runnable {
       // Send response message.
       outLock.lock();
       try {
-        toClient.writeUTF(CMD.login());
+        toClient.writeUTF(Message.login());
         toClient.writeInt(result);
       }
       finally {
@@ -143,7 +143,7 @@ class Session implements Runnable {
 
       outLock.lock();
       try {
-        toClient.writeUTF(CMD.logout());
+        toClient.writeUTF(Message.logout());
       }
       finally {
         outLock.unlock();
@@ -164,7 +164,7 @@ class Session implements Runnable {
       String[] results = {"A", "B", "C"};
       outLock.lock();
       try {
-        toClient.writeUTF(CMD.query());
+        toClient.writeUTF(Message.query());
         toClient.writeInt(results.length);
         for (String s : results) {
           toClient.writeUTF(s);
@@ -176,6 +176,19 @@ class Session implements Runnable {
     }
     catch (IOException e) {
       System.err.println("Failed to handle register task");
+    }
+  }
+
+  private void like() {
+    try {
+      String word = fromClient.readUTF();
+      int uid = fromClient.readInt();
+      int dict = fromClient.readInt();
+      Server.db.likeWord(word, uid, dict);
+      toClient.writeUTF(Message.like());
+    }
+    catch (IOException e) {
+      System.err.println(e.toString());
     }
   }
 
@@ -204,7 +217,7 @@ class Session implements Runnable {
     outLock.lock();
     try {
       // Send online user list
-      toClient.writeUTF(CMD.list());
+      toClient.writeUTF(Message.list());
       toClient.writeInt(list.length);
       for (String user : list) {
         toClient.writeUTF(user);
@@ -221,7 +234,7 @@ class Session implements Runnable {
   private void notifyLogin(String newUser) {
     outLock.lock();
     try {
-      toClient.writeUTF(CMD.notifyLogin());
+      toClient.writeUTF(Message.notifyLogin());
       toClient.writeUTF(newUser);
     }
     catch (IOException e) {
@@ -235,7 +248,7 @@ class Session implements Runnable {
   private void notifyLogout(String leavingUser) {
     outLock.lock();
     try {
-      toClient.writeUTF(CMD.notifyLogout());
+      toClient.writeUTF(Message.notifyLogout());
       toClient.writeUTF(leavingUser);
     }
     catch (IOException e) {
@@ -256,7 +269,7 @@ class Session implements Runnable {
           handler.run();
         }
         else {
-          System.out.println("CMD " + cmd + " not found");
+          System.out.println("Message " + cmd + " not found");
         }
       }
       catch (IOException e) {

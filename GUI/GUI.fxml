@@ -8,16 +8,24 @@
 
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.CheckBox?>
 <GridPane fx:controller="GUI.Controller" xmlns:fx="http://javafx.com/fxml" hgap="10" vgap="10">
     <VBox>
         <HBox>
             <Button text="register" onAction="#register" />
             <Button text="login" onAction="#login" />
             <Button text="logout" onAction="#logout" />
+            <Button text="like" onAction="#like" />
+        </HBox>
+        <HBox>
+            <CheckBox fx:id="bing" text="bing" />
+            <CheckBox fx:id="baidu" text="baidu" />
+            <CheckBox fx:id="netEase" text="netEase" />
         </HBox>
         <Label id="message" text="hello" />
         <TextField fx:id="username" promptText="username" />
         <PasswordField fx:id="password" />
+        <TextField fx:id="word" promptText="type a word" />
     </VBox>
 
 </GridPane>

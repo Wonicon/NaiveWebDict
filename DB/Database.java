@@ -107,26 +107,26 @@ public class Database {
     }
   }
 
-  public boolean likeWord(String like_word, int uid, int source) {
+  public boolean likeWord(String word, int uid, int source) {
     boolean result = false;
     try (
         Connection conn = DriverManager.getConnection(url, user, control_password);
         Statement stmt = conn.createStatement();
-        ResultSet rs = stmt.executeQuery("select * from user_like where uid=\"" + uid + "\" and word=\"" + like_word + "\" and dict_id=" + source + ";")
+        ResultSet rs = stmt.executeQuery("select * from user_like where uid=\"" + uid + "\" and word=\"" + word + "\" and dict_id=" + source + ";")
     ) {
       if (!rs.next()) {  // 判断是否点赞
-        stmt.executeUpdate("insert user_like (word, uid, dict_id) values(\"" + like_word + "\",\"" + uid + "\"," + source + ";");
-        String sql = "select * from count where word=\"" + like_word + "\" and source=" + source + ";";
+        stmt.executeUpdate("insert into user_like (word, uid, dict_id) values('" + word + "'," + uid + "," + source + ");");
+        String sql = "select * from count where word=\"" + word + "\" and dict_id=" + source + ";";
         if (!stmt.executeQuery(sql).next()) { // 如果从来没有人点过生成新的count
-          stmt.executeUpdate("insert count (word, dict_id, count) values(\"" + like_word + "\"," + source + ",1;");
+          stmt.executeUpdate("insert count (word, dict_id, count) values(\"" + word + "\"," + source + ",1);");
         }
         else {  // 已经存在则进行 update
-          stmt.executeUpdate("update count set count=count+1 where word=\"" + like_word + "\" and dict_id=" + source + ";");
+          stmt.executeUpdate("update count set count=count+1 where word=\"" + word + "\" and dict_id=" + source + ";");
         }
         result = true;  // 成功点赞
       }
       else {  // 点赞失败
-        System.out.println("Duplicated like for '" + like_word + "' by " + uid);
+        System.out.println("Duplicated like for '" + word + "' by " + uid);
       }
     }
     catch (SQLException e) {
