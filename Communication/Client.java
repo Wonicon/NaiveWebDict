@@ -23,11 +23,13 @@ public class Client {
 
   private DataOutputStream toServer;
 
-  private enum State {
+  public enum State {
     Start, Register, Login, Logout, Query, List, Online
   }
 
   private volatile State state = State.Start;
+
+  public State getState() { return state; }
 
   private Lock stateLock = new ReentrantLock();
 
@@ -46,13 +48,23 @@ public class Client {
    * @param password Password
    */
   public void register(String username, String password) {
+    stateLock.lock();
     try {
-      toServer.writeUTF(CMD.register());
-      toServer.writeUTF(username);
-      toServer.writeUTF(password);
+      if (state == State.Start) {
+        toServer.writeUTF(CMD.register());
+        toServer.writeUTF(username);
+        toServer.writeUTF(password);
+        state = State.Register;
+      }
+      else {
+        System.out.println("No need to register");
+      }
     }
     catch (IOException e) {
       System.err.println("Failed to send register request");
+    }
+    finally {
+      stateLock.unlock();
     }
   }
 
@@ -63,14 +75,24 @@ public class Client {
    * @param password Password
    */
   public void login(String username, String password) {
+    stateLock.lock();
     try {
-      this.username = username;
-      toServer.writeUTF(CMD.login());
-      toServer.writeUTF(username);
-      toServer.writeUTF(password);
+      if (state == State.Start) {
+        toServer.writeUTF(CMD.login());
+        toServer.writeUTF(username);
+        toServer.writeUTF(password);
+        this.username = username;
+        state = State.Login;
+      }
+      else {
+        System.out.println("Logout first or wait other request to be answered");
+      }
     }
     catch (IOException e) {
       System.err.println("Failed to send login request");
+    }
+    finally {
+      stateLock.unlock();
     }
   }
 
@@ -78,13 +100,21 @@ public class Client {
    * Log out an account
    */
   public void logout() {
+    stateLock.lock();
     try {
-      DataOutputStream out = new DataOutputStream(socket.getOutputStream());
-      out.writeUTF(CMD.logout());
-      out.writeInt(uid);
+      if (state == State.Online) {
+        toServer.writeUTF(CMD.logout());
+        state = State.Logout;
+      }
+      else {
+        System.out.println("Login first or wait other request to be answered");
+      }
     }
     catch (IOException e) {
       System.err.println("Failed to send logout request");
+    }
+    finally {
+      stateLock.unlock();
     }
   }
 
@@ -96,23 +126,22 @@ public class Client {
    * @param word Word to query.
    */
   public void query(String word) {
-    String[] results = null;
-    try {
-      toServer.writeUTF(CMD.query());
-      toServer.writeInt(uid);
-      toServer.writeUTF(word);
-    }
-    catch (IOException e) {
-      System.err.println("Failed to send query request");
-    }
   }
 
+  /**
+   * Request online user list.
+   */
   public void list() {
+    stateLock.lock();
     try {
       toServer.writeUTF(CMD.list());
+      state = State.List;
     }
     catch (IOException e) {
       System.err.println("Failed to send list request");
+    }
+    finally {
+      stateLock.unlock();
     }
   }
 
@@ -150,12 +179,13 @@ public class Client {
           uid = fromServer.readInt();
           if (uid > 0) {
             System.out.println("login as " + username);
+            state = State.Online;
           }
           else {
             System.out.println("login failed");
             username = "";
+            state = State.Start;
           }
-          state = State.Online;
           response.signal();
         }
         else if (cmd.equals(CMD.logout())) {
@@ -209,43 +239,28 @@ public class Client {
     System.out.print(username + "> ");
     Scanner input = new Scanner(System.in);
     while (input.hasNext()) {
+      String[] arg = input.nextLine().split(" ");
+      String cmd = arg[0];
+
+      // Route to different request sender.
+      if (cmd.equals(CMD.register())) {
+        register(arg[1], arg[2]);
+      }
+      else if (cmd.equals(CMD.login())) {
+        login(arg[1], arg[2]);
+      }
+      else if (cmd.equals(CMD.query())) {
+        query(arg[1]);
+      }
+      else if (cmd.equals(CMD.logout())) {
+        logout();
+      }
+      else if (cmd.equals(CMD.list())) {
+        list();
+      }
+
       stateLock.lock();
       try {
-        String[] arg = input.nextLine().split(" ");
-        String cmd = arg[0];
-
-        // Route to different request sender.
-        if (cmd.equals(CMD.register())) {
-          register(arg[1], arg[2]);
-          state = State.Register;
-        }
-        else if (cmd.equals(CMD.login())) {
-          if (state != State.Online) {
-            login(arg[1], arg[2]);
-            state = State.Login;
-          }
-          else {
-            System.out.println("logout first!");
-          }
-        }
-        else if (cmd.equals(CMD.query())) {
-          query(arg[1]);
-          state = State.Query;
-        }
-        else if (cmd.equals(CMD.logout())) {
-          if (state == State.Online) {
-            logout();
-            state = State.Logout;
-          }
-          else {
-            System.out.println("login first!");
-          }
-        }
-        else if (cmd.equals(CMD.list())) {
-          list();
-          state = State.List;
-        }
-
         if (state != State.Start && state != State.Online) {
           State old = state;
           while (state == old) {

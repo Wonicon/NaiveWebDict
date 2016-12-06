@@ -1,5 +1,7 @@
 package DB;
 
+import com.sun.org.apache.xpath.internal.operations.Bool;
+
 import java.sql.*;
 
 public class Database {
@@ -66,7 +68,7 @@ public class Database {
    */
   public int login(String username, String password) {
     int uid = 0;
-    String sql = "select uid, password from user where username=\"" + username + "\";";
+    String sql = "select uid, password, login from user where username=\"" + username + "\";";
     try (
         Connection conn = DriverManager.getConnection(url, user, control_password);
         Statement stmt = conn.createStatement();
@@ -77,8 +79,9 @@ public class Database {
       }
       else {
         String realPassword = rs.getString("password");
+        int logged = Integer.parseInt(rs.getString("login"));
         int uidTemp = Integer.parseInt(rs.getString("uid"));
-        if (realPassword.equals(password)) {
+        if (realPassword.equals(password) && logged == 0) {
           stmt.executeUpdate("update user set login=1 where username=\"" + username + "\";");
           uid = uidTemp;
           System.out.println("User " + username + " login successfully");

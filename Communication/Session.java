@@ -123,7 +123,6 @@ class Session implements Runnable {
 
   private void logout() {
     try {
-      int uid = fromClient.readInt();
       if (state == State.ONLINE) {
         System.out.println(sessionID + ":logout:uid" + uid);
         Server.db.logout(uid);
@@ -135,6 +134,8 @@ class Session implements Runnable {
         }
         Server.sessionsLock.unlock();
         state = State.OFFLINE;
+        username = "";
+        uid = 0;
       }
       else {
         System.out.println("Session" + sessionID + ": invalid logout request.");
@@ -260,6 +261,9 @@ class Session implements Runnable {
       }
       catch (IOException e) {
         System.err.println("Session " + sessionID + " failed to communicate: " + e.toString());
+        if (uid != 0) {
+          logout();
+        }
         break;
       }
     }
