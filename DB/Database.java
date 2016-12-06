@@ -1,19 +1,17 @@
 package DB;
 
-import com.sun.org.apache.xpath.internal.operations.Bool;
-
 import java.sql.*;
 
 public class Database {
-  final static String DBDRIVER = "org.gjt.mm.mysql.Driver";
+  private final static String DBDRIVER = "org.gjt.mm.mysql.Driver";
 
-  final static String database = "DICT";
+  private final static String database = "DICT";
 
-  final static String url = "jdbc:mysql://localhost:3306/" + database;
+  private final static String url = "jdbc:mysql://localhost:3306/" + database;
 
-  String user = null;
+  private String user = null;
 
-  String control_password = null;
+  private String control_password = null;
 
   public Database(String user, String password) {
     this.user = user;
@@ -40,7 +38,7 @@ public class Database {
     try (
         Connection conn = DriverManager.getConnection(url, user, control_password);
         Statement stmt = conn.createStatement();
-        ResultSet rs = stmt.executeQuery(sql);
+        ResultSet rs = stmt.executeQuery(sql)
     ) {
       if (rs.next()) {
         System.out.println("User " + username + " already exists.");
@@ -72,7 +70,7 @@ public class Database {
     try (
         Connection conn = DriverManager.getConnection(url, user, control_password);
         Statement stmt = conn.createStatement();
-        ResultSet rs = stmt.executeQuery(sql);
+        ResultSet rs = stmt.executeQuery(sql)
     ) {
       if (!rs.next()) {
         System.out.println("User " + username + " not found");
@@ -100,7 +98,7 @@ public class Database {
   public void logout(int uid) {
     try (
         Connection conn = DriverManager.getConnection(url, user, control_password);
-        Statement stmt = conn.createStatement();
+        Statement stmt = conn.createStatement()
     ) {
       stmt.executeUpdate("update user set login=false where uid=\"" + uid + "\";");
     }
@@ -109,79 +107,99 @@ public class Database {
     }
   }
 
-  //以下的函数还没有完全完成
-  public void like_word(String username, String like_word, int source) throws ClassNotFoundException, SQLException {
-    try {
-      Class.forName(DBDRIVER);
+  public boolean likeWord(String like_word, int uid, int source) {
+    boolean result = false;
+    try (
+        Connection conn = DriverManager.getConnection(url, user, control_password);
+        Statement stmt = conn.createStatement();
+        ResultSet rs = stmt.executeQuery("select * from user_like where uid=\"" + uid + "\" and word=\"" + like_word + "\" and dict_id=" + source + ";")
+    ) {
+      if (!rs.next()) {  // 判断是否点赞
+        stmt.executeUpdate("insert user_like (word, uid, dict_id) values(\"" + like_word + "\",\"" + uid + "\"," + source + ";");
+        String sql = "select * from count where word=\"" + like_word + "\" and source=" + source + ";";
+        if (!stmt.executeQuery(sql).next()) { // 如果从来没有人点过生成新的count
+          stmt.executeUpdate("insert count (word, dict_id, count) values(\"" + like_word + "\"," + source + ",1;");
+        }
+        else {  // 已经存在则进行 update
+          stmt.executeUpdate("update count set count=count+1 where word=\"" + like_word + "\" and dict_id=" + source + ";");
+        }
+        result = true;  // 成功点赞
+      }
+      else {  // 点赞失败
+        System.out.println("Duplicated like for '" + like_word + "' by " + uid);
+      }
     }
-    catch (ClassNotFoundException e) {
-      e.printStackTrace();
-    }
-    Connection conn = DriverManager.getConnection(url, user, control_password);
-
-    // 4.获取Statement对象
-    Statement stmt = conn.createStatement();
-
-    // 5.执行SQL语句
-    stmt.executeQuery("use naive");
-
-    //这里是有问题的，只关心了词语没有关心点赞的人
-    ResultSet rs = stmt.executeQuery("select * from user_like where word=\"" + like_word + "\";");
-    if (!rs.next()) { //数据库中只保存被点赞过的词，如果没有被点赞过先生成
-      stmt.executeQuery("insert user_like values(\"" + username + "\",\"" + like_word + "\",0,0,0;");
-    }
-    if (source == 1) { //from bing
-      stmt.execute("update user_like set bing=1 where word=\"" + like_word + "\";");
-    }
-    else if (source == 2) { //from neteast
-      stmt.execute("update user_like set neteast=1 where word=\"" + like_word + "\";");
-    }
-    else if (source == 3) { //from baidu
-      stmt.execute("update user_like set baidu=1 where word=\"" + like_word + "\";");
+    catch (SQLException e) {
+      System.err.println(e.toString());
     }
 
-    // 6.处理从数据库中获取到的数据
-
-    // 7.关闭链接,释放资源
-    rs.close();
-    stmt.close();
-    conn.close();
+    return result;
   }
 
-  public void search_like_word(String username, String like_word, int source) throws ClassNotFoundException, SQLException {
-    try {
-      Class.forName(DBDRIVER);
-    }
-    catch (ClassNotFoundException e) {
-      e.printStackTrace();
-    }
-
+  public boolean dislikeWord(String word, int uid, int source) {
+    boolean result = false;
+    try (
     Connection conn = DriverManager.getConnection(url, user, control_password);
-
-    // 4.获取Statement对象
     Statement stmt = conn.createStatement();
-
-    // 5.执行SQL语句
-    stmt.executeQuery("use naive");
-    ResultSet rs = stmt.executeQuery("select * from user_like where word=\"" + like_word + "\";");
-    if (!rs.next()) { //数据库中只保存被点赞过的词，如果没有被点赞过先生成
-      stmt.executeQuery("insert user_like values(\"" + username + "\",\"" + like_word + "\",0,0,0;");
+    ResultSet rs = stmt.executeQuery("select * from user_like where uid=\"" + uid + "\" and word=\"" + word + "\" and dict_id=" + source + ";")
+    ) {
+      if (rs.next()) { // 判断是否点赞
+        stmt.executeUpdate("delete from user_like where uid=\"" + uid + "\" and word=\"" + word + "\" and dict_id=" + source + ";");
+        stmt.executeUpdate("update count set count=count-1 where word=\"" + word + "\" and dict_id=" + source + ";");
+        rs.close();
+        stmt.close();
+        conn.close();
+        result = true;
+      }
     }
-    if (source == 1) { //from bing
-      stmt.execute("update user_like set bing=1 where word=\"" + like_word + "\";");
-    }
-    else if (source == 2) { //from neteast
-      stmt.execute("update user_like set neteast=1 where word=\"" + like_word + "\";");
-    }
-    else if (source == 3) { //from baidu
-      stmt.execute("update user_like set baidu=1 where word=\"" + like_word + "\";");
+    catch (SQLException e) {
+      System.err.println(e.toString());
     }
 
-    // 6.处理从数据库中获取到的数据
+    return result;
+  }
 
-    // 7.关闭链接,释放资源
-    rs.close();
-    stmt.close();
-    conn.close();
+  /**
+   * Retrieve the `like' counts from a sequence of dictionaries.
+   * @param word The word to be queried.
+   * @param dictID Dictionary id series.
+   * @return The `like' count array in the same order of <code>dictID</code>.
+   */
+  public int[] queryCount(String word, int[] dictID) {
+    int[] counts = new int[dictID.length];
+    try (
+        Connection conn = DriverManager.getConnection(url, user, control_password);
+        Statement stmt = conn.createStatement()
+    ) {
+      for (int i = 0; i < dictID.length; i++) {
+        ResultSet rs = stmt.executeQuery("select count from count where word='" + word + " and dict_id=" + dictID[i]);
+        counts[i] = rs.getInt("count");
+      }
+    }
+    catch (SQLException e) {
+      System.err.println(e.toString());
+    }
+    return counts;
+  }
+
+  /**
+   * Query whether a user like a word's explanation from a specific dictionary.
+   * @param word The word to be queried.
+   * @param uid The user's id.
+   * @param source The id for the dictionary.
+   * @return <code>true</code> if the entry exists, <code>false</code> otherwise.
+   */
+  public boolean queryUser(String word, int uid, int source) {
+    boolean result = false;
+    try (
+        Connection conn = DriverManager.getConnection(url, user, control_password);
+        Statement stmt = conn.createStatement()
+    ) {
+      result = stmt.execute("select * from user_like where uid=\"" + uid + "\" and word=\"" + word + "\" and dict_id=" + source + ";");
+    }
+    catch (SQLException e) {
+      System.err.println(e.toString());
+    }
+    return result;
   }
 }
