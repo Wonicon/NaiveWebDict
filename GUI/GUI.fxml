@@ -20,9 +20,9 @@
         <PasswordField fx:id="password" />
 
         <HBox>
-            <CheckBox fx:id="bingSel" text="bing" />
-            <CheckBox fx:id="baiduSel" text="baidu" />
-            <CheckBox fx:id="netEaseSel" text="netEase" />
+            <CheckBox fx:id="bingSel" text="bing" selected="true" />
+            <CheckBox fx:id="baiduSel" text="baidu" selected="true" />
+            <CheckBox fx:id="netEaseSel" text="netEase" selected="true" />
         </HBox>
 
         <TextField fx:id="word" promptText="type a word" />

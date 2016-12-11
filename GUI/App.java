@@ -3,8 +3,6 @@ package GUI;
 import Communication.Client;
 
 import javafx.application.Application;
-import javafx.event.EventHandler;
-import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -12,9 +10,6 @@ import javafx.stage.Stage;
 
 public class App extends Application {
   static Client model = new Client();
-
-  @FXML
-  private String username;
 
   @Override
   public void start(Stage primaryStage) throws Exception {

@@ -2,11 +2,9 @@ package GUI;
 
 import javafx.application.Platform;
 import javafx.fxml.FXML;
-import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
-import javafx.scene.layout.CornerRadii;
 import javafx.scene.paint.Color;
 
 import java.util.ArrayList;
@@ -96,9 +94,8 @@ public class Controller {
           labels.get(i).setText(Integer.toString(-counts[i]));
         }
         else {
-          System.out.println("sdf");
           btns.get(i).setBackground(new Background(new BackgroundFill(Color.WHITE, null, null)));
-          labels.get(i).setText(Integer.toString(-counts[i]));
+          labels.get(i).setText(Integer.toString(counts[i]));
         }
       }
     }));
@@ -106,6 +103,7 @@ public class Controller {
 
   private void like(String dict) {
     App.model.like(word.getText(), dictMap.get(dict));
+    count();
   }
 
   @FXML

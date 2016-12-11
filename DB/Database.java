@@ -125,31 +125,9 @@ public class Database {
         }
         result = true;  // 成功点赞
       }
-      else {  // 点赞失败
-        System.out.println("Duplicated like for '" + word + "' by " + uid);
-      }
-    }
-    catch (SQLException e) {
-      System.err.println(e.toString());
-    }
-
-    return result;
-  }
-
-  public boolean dislikeWord(String word, int uid, int source) {
-    boolean result = false;
-    try (
-    Connection conn = DriverManager.getConnection(url, user, control_password);
-    Statement stmt = conn.createStatement();
-    ResultSet rs = stmt.executeQuery("select * from user_like where uid=\"" + uid + "\" and word=\"" + word + "\" and dict_id=" + source + ";")
-    ) {
-      if (rs.next()) { // 判断是否点赞
-        stmt.executeUpdate("delete from user_like where uid=\"" + uid + "\" and word=\"" + word + "\" and dict_id=" + source + ";");
-        stmt.executeUpdate("update count set count=count-1 where word=\"" + word + "\" and dict_id=" + source + ";");
-        rs.close();
-        stmt.close();
-        conn.close();
-        result = true;
+      else {  // 取消点赞
+        stmt.executeUpdate("delete from user_like where uid=\"" + uid + "\" and word=\"" + word + "\" and dict_id=" + source);
+        stmt.executeUpdate("update count set count=count-1 where word=\"" + word + "\" and dict_id=" + source);
       }
     }
     catch (SQLException e) {
