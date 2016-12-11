@@ -49,12 +49,12 @@ class Session implements Runnable {
       System.err.println("Session " + sessionID + ": cannot get in/out stream.");
     }
 
-    handlerMap.put(Message.register(), this::register);
-    handlerMap.put(Message.login(), this::login);
-    handlerMap.put(Message.query(), this::query);
-    handlerMap.put(Message.logout(), this::logout);
-    handlerMap.put(Message.list(), this::list);
-    handlerMap.put(Message.like(), this::like);
+    handlerMap.put(Message.register, this::register);
+    handlerMap.put(Message.login, this::login);
+    handlerMap.put(Message.query, this::query);
+    handlerMap.put(Message.logout, this::logout);
+    handlerMap.put(Message.list, this::list);
+    handlerMap.put(Message.like, this::like);
   }
 
   private void register() {
@@ -65,7 +65,7 @@ class Session implements Runnable {
 
       outLock.lock();
       try {
-        toClient.writeUTF(Message.register());
+        toClient.writeUTF(Message.register);
         toClient.writeBoolean(Server.db.register(username, password));
       }
       finally {
@@ -109,7 +109,7 @@ class Session implements Runnable {
       // Send response message.
       outLock.lock();
       try {
-        toClient.writeUTF(Message.login());
+        toClient.writeUTF(Message.login);
         toClient.writeInt(result);
       }
       finally {
@@ -143,7 +143,7 @@ class Session implements Runnable {
 
       outLock.lock();
       try {
-        toClient.writeUTF(Message.logout());
+        toClient.writeUTF(Message.logout);
       }
       finally {
         outLock.unlock();
@@ -164,7 +164,7 @@ class Session implements Runnable {
       String[] results = {"A", "B", "C"};
       outLock.lock();
       try {
-        toClient.writeUTF(Message.query());
+        toClient.writeUTF(Message.query);
         toClient.writeInt(results.length);
         for (String s : results) {
           toClient.writeUTF(s);
@@ -185,11 +185,21 @@ class Session implements Runnable {
       int uid = fromClient.readInt();
       int dict = fromClient.readInt();
       Server.db.likeWord(word, uid, dict);
-      toClient.writeUTF(Message.like());
+      toClient.writeUTF(Message.like);
     }
     catch (IOException e) {
       System.err.println(e.toString());
     }
+  }
+
+  /**
+   * Service count request.
+   *
+   * -> CMD.count, n, id1, id2, ..., idn
+   * <- CMD.count, n, n1, n2, ..., nn.
+   */
+  private void count() {
+
   }
 
   /**
@@ -217,7 +227,7 @@ class Session implements Runnable {
     outLock.lock();
     try {
       // Send online user list
-      toClient.writeUTF(Message.list());
+      toClient.writeUTF(Message.list);
       toClient.writeInt(list.length);
       for (String user : list) {
         toClient.writeUTF(user);
@@ -234,7 +244,7 @@ class Session implements Runnable {
   private void notifyLogin(String newUser) {
     outLock.lock();
     try {
-      toClient.writeUTF(Message.notifyLogin());
+      toClient.writeUTF(Message.notifyLogin);
       toClient.writeUTF(newUser);
     }
     catch (IOException e) {
@@ -248,7 +258,7 @@ class Session implements Runnable {
   private void notifyLogout(String leavingUser) {
     outLock.lock();
     try {
-      toClient.writeUTF(Message.notifyLogout());
+      toClient.writeUTF(Message.notifyLogout);
       toClient.writeUTF(leavingUser);
     }
     catch (IOException e) {

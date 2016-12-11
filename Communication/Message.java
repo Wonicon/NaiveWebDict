@@ -3,35 +3,19 @@ package Communication;
 import java.io.Serializable;
 
 class Message {
-  static String register() {
-    return "register";
-  }
+  static final String register = "register";
 
-  static String login() {
-    return "login";
-  }
+  static final String login =  "login";
 
-  static String query() {
-    return "query";
-  }
+  static final String query = "query";
 
-  static String list() {
-    return "list";
-  }
+  static final String list = "list";
 
-  static String logout() {
-    return "logout";
-  }
+  static final String logout = "logout";
 
-  static String notifyLogin() {
-    return "notifyLogin";
-  }
+  static final String notifyLogin = "notifyLogin";
 
-  static String notifyLogout() {
-    return "notifyLogout";
-  }
+  static final String notifyLogout = "notifyLogout";
 
-  static String like() {
-    return "like";
-  }
+  static final String like = "like";
 }
