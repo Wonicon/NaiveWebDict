@@ -249,58 +249,60 @@ public class Client {
       stateLock.lock();
       System.out.println("receive cmd " + cmd);
       try {
-        // TODO Handle push message.
-        if (cmd.equals(Message.notifyLogin)) {
-          System.out.println(fromServer.readUTF() + " has logged in.");
-        }
-        else if (cmd.equals(Message.notifyLogout)) {
-          System.out.println(fromServer.readUTF() + " has logged out.");
-        }
-        // TODO Handle response message.
-        else if (cmd.equals(Message.register)) {
-          assert state == State.Register;
-          boolean result = fromServer.readBoolean();
-          System.out.println("registered: " + result);
-          state = State.Start;
-          response.signal();
-        }
-        else if (cmd.equals(Message.login)) {
-          assert state == State.Login;
-          uid = fromServer.readInt();
-          if (uid > 0) {
-            System.out.println("login as " + username);
-            state = State.Online;
-          }
-          else {
-            System.out.println("login failed");
-            username = "";
+        switch (cmd) {
+          // Handle push message.
+          case Message.notifyLogin:
+            System.out.println(fromServer.readUTF() + " has logged in.");
+            break;
+          case Message.notifyLogout:
+            System.out.println(fromServer.readUTF() + " has logged out.");
+            break;
+          // Handle response message.
+          case Message.register:
+            assert state == State.Register;
+            boolean result = fromServer.readBoolean();
+            System.out.println("registered: " + result);
             state = State.Start;
-          }
-          response.signal();
-        }
-        else if (cmd.equals(Message.logout)) {
-          assert state == State.Logout;
-          state = State.Start;
-          response.signal();
-        }
-        else if (cmd.equals(Message.list)) {
-          assert state == State.List;
-          int n = fromServer.readInt();
-          for (int i = 0; i < n; i++) {
-            System.out.println(fromServer.readUTF());
-          }
-          state = State.Online;
-          response.signal();
-        }
-        else if (cmd.equals(Message.count)) {
-          assert state == State.Count;
-          int[] counts = new int[fromServer.readInt()];
-          for (int i = 0; i < counts.length; i++) {
-            counts[i] = fromServer.readInt();
-          }
-          countCallback.run(counts);
-          state = State.Online;
-          response.signal();
+            response.signal();
+            break;
+          case Message.login:
+            assert state == State.Login;
+            uid = fromServer.readInt();
+            if (uid > 0) {
+              System.out.println("login as " + username);
+              state = State.Online;
+            }
+            else {
+              System.out.println("login failed");
+              username = "";
+              state = State.Start;
+            }
+            response.signal();
+            break;
+          case Message.logout:
+            assert state == State.Logout;
+            state = State.Start;
+            response.signal();
+            break;
+          case Message.list:
+            assert state == State.List;
+            int n = fromServer.readInt();
+            for (int i = 0; i < n; i++) {
+              System.out.println(fromServer.readUTF());
+            }
+            state = State.Online;
+            response.signal();
+            break;
+          case Message.count:
+            assert state == State.Count;
+            int[] counts = new int[fromServer.readInt()];
+            for (int i = 0; i < counts.length; i++) {
+              counts[i] = fromServer.readInt();
+            }
+            countCallback.run(counts);
+            state = State.Online;
+            response.signal();
+            break;
         }
       }
       catch (IOException e) {
@@ -323,17 +325,19 @@ public class Client {
       String cmd = arg[0];
 
       // Route to different request sender.
-      if (cmd.equals(Message.register)) {
-        inst.register(arg[1], arg[2]);
-      }
-      else if (cmd.equals(Message.login)) {
-        inst.login(arg[1], arg[2]);
-      }
-      else if (cmd.equals(Message.logout)) {
-        inst.logout();
-      }
-      else if (cmd.equals(Message.list)) {
-        inst.list();
+      switch (cmd) {
+        case Message.register:
+          inst.register(arg[1], arg[2]);
+          break;
+        case Message.login:
+          inst.login(arg[1], arg[2]);
+          break;
+        case Message.logout:
+          inst.logout();
+          break;
+        case Message.list:
+          inst.list();
+          break;
       }
 
       inst.lock();
