@@ -2,10 +2,12 @@ package GUI;
 
 import javafx.application.Platform;
 import javafx.fxml.FXML;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.PasswordField;
-import javafx.scene.control.TextField;
+import javafx.geometry.Insets;
+import javafx.scene.control.*;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundFill;
+import javafx.scene.layout.CornerRadii;
+import javafx.scene.paint.Color;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -22,11 +24,15 @@ public class Controller {
 
   @FXML private Label bingCount, baiduCount, netEaseCount;
 
+  @FXML private Button bingBtn, baiduBtn, netEaseBtn;
+
+  private final String bing = "Bing", baidu = "Baidu", netEase = "NetEase";
+
   private Map<String, Integer> dictMap = new HashMap<>();
 
   private Map<String, Label> labelMap = new HashMap<>();
 
-  private final String bing = "Bing", baidu = "Baidu", netEase = "NetEase";
+  private Map<String, Button> btnMap = new HashMap<>();
 
   @FXML
   public void initialize() {
@@ -38,6 +44,10 @@ public class Controller {
     labelMap.put(bing, bingCount);
     labelMap.put(baidu, baiduCount);
     labelMap.put(netEase, netEaseCount);
+
+    btnMap.put(bing, bingBtn);
+    btnMap.put(baidu, baiduBtn);
+    btnMap.put(netEase, netEaseBtn);
 
     bingSel.setId(bing);
     baiduSel.setId(baidu);
@@ -63,10 +73,12 @@ public class Controller {
   public void count() {
     ArrayList<Integer> dicts = new ArrayList<>();
     ArrayList<Label> labels = new ArrayList<>();
+    ArrayList<Button> btns = new ArrayList<>();
     for (CheckBox cb : new CheckBox[] { bingSel, baiduSel, netEaseSel }) {
       if (cb.isSelected()) {
         dicts.add(dictMap.get(cb.getId()));
         labels.add(labelMap.get(cb.getId()));
+        btns.add(btnMap.get(cb.getId()));
       }
     }
 
@@ -79,7 +91,15 @@ public class Controller {
     // We cannot directly change the UI elements in other threads. So there is a embedded callback.
     App.model.count(word.getText(), dictsArray, (int[] counts) -> Platform.runLater(() -> {
       for (int i = 0; i < counts.length; i++) {
-        labels.get(i).setText(Integer.toString(counts[i]));
+        if (counts[i] < 0) {
+          btns.get(i).setBackground(new Background(new BackgroundFill(Color.RED, null, null)));
+          labels.get(i).setText(Integer.toString(-counts[i]));
+        }
+        else {
+          System.out.println("sdf");
+          btns.get(i).setBackground(new Background(new BackgroundFill(Color.WHITE, null, null)));
+          labels.get(i).setText(Integer.toString(-counts[i]));
+        }
       }
     }));
   }

@@ -182,7 +182,7 @@ class Session implements Runnable {
       for (int i = 0; i < dicts.length; i++) {
         dicts[i] = fromClient.readInt();
       }
-      int[] counts = Server.db.queryCount(word, dicts);
+      int[] counts = Server.db.queryCount(word, dicts, uid);
       // Send
       outLock.lock();
       try {

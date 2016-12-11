@@ -30,19 +30,19 @@
         <HBox>
             <Label text="Bing" />
             <Label fx:id="bingCount" />
-            <Button text="like" onAction="#likeBing" />
+            <Button fx:id="bingBtn" text="like" onAction="#likeBing" />
         </HBox>
 
         <HBox>
             <Label text="Baidu" />
             <Label fx:id="baiduCount" />
-            <Button text="like" onAction="#likeBaidu" />
+            <Button fx:id="baiduBtn" text="like" onAction="#likeBaidu" />
         </HBox>
 
         <HBox>
             <Label text="NetEase" />
             <Label fx:id="netEaseCount" />
-            <Button text="like" onAction="#likeNetEase" />
+            <Button fx:id="netEaseBtn" text="like" onAction="#likeNetEase" />
         </HBox>
     </VBox>
 

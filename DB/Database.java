@@ -165,7 +165,7 @@ public class Database {
    * @param dictID Dictionary id series.
    * @return The `like' count array in the same order of <code>dictID</code>.
    */
-  public int[] queryCount(String word, int[] dictID) {
+  public int[] queryCount(String word, int[] dictID, int uid) {
     int[] counts = new int[dictID.length];
     try (
         Connection conn = DriverManager.getConnection(url, user, control_password);
@@ -177,6 +177,9 @@ public class Database {
         ResultSet rs = stmt.executeQuery(sql);
         if (rs.next()) {
           counts[i] = rs.getInt("count");
+          if (queryUser(word, uid, dictID[i])) {
+            counts[i] = -counts[i];
+          }
         }
         else {
           System.err.println("dict id " + dictID[i] + " not found");
@@ -204,7 +207,10 @@ public class Database {
         Connection conn = DriverManager.getConnection(url, user, control_password);
         Statement stmt = conn.createStatement()
     ) {
-      result = stmt.execute("select * from user_like where uid=\"" + uid + "\" and word=\"" + word + "\" and dict_id=" + source + ";");
+      String sql = "select * from user_like where uid=" + uid + " and word='" + word + "' and dict_id=" + source;
+      System.out.println(sql);
+      result = stmt.executeQuery(sql).next();
+      System.out.println(result);
     }
     catch (SQLException e) {
       System.err.println(e.toString());
