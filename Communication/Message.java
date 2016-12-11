@@ -1,7 +1,5 @@
 package Communication;
 
-import java.io.Serializable;
-
 class Message {
   static final String register = "register";
 

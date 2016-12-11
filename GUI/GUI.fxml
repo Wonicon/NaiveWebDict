@@ -1,6 +1,4 @@
-<?import javafx.geometry.Insets?>
 <?import javafx.scene.layout.GridPane?>
-<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.VBox?>
@@ -15,21 +13,37 @@
             <Button text="register" onAction="#register" />
             <Button text="login" onAction="#login" />
             <Button text="logout" onAction="#logout" />
-            <Button text="like" onAction="#like" />
             <Button text="query" onAction="#count" />
         </HBox>
-        <HBox>
-            <CheckBox fx:id="bing" text="bing" />
-            <CheckBox fx:id="baidu" text="baidu" />
-            <CheckBox fx:id="netEase" text="netEase" />
-        </HBox>
-        <Label id="message" text="hello" />
+
         <TextField fx:id="username" promptText="username" />
         <PasswordField fx:id="password" />
+
+        <HBox>
+            <CheckBox fx:id="bingSel" text="bing" />
+            <CheckBox fx:id="baiduSel" text="baidu" />
+            <CheckBox fx:id="netEaseSel" text="netEase" />
+        </HBox>
+
         <TextField fx:id="word" promptText="type a word" />
-        <Label fx:id="bingCount" text="bing" />
-        <Label fx:id="baiduCount" text="baidu" />
-        <Label fx:id="netEaseCount" text="netEase" />
+
+        <HBox>
+            <Label text="Bing" />
+            <Label fx:id="bingCount" />
+            <Button text="like" onAction="#likeBing" />
+        </HBox>
+
+        <HBox>
+            <Label text="Baidu" />
+            <Label fx:id="baiduCount" />
+            <Button text="like" onAction="#likeBaidu" />
+        </HBox>
+
+        <HBox>
+            <Label text="NetEase" />
+            <Label fx:id="netEaseCount" />
+            <Button text="like" onAction="#likeNetEase" />
+        </HBox>
     </VBox>
 
 </GridPane>
