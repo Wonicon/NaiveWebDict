@@ -37,6 +37,12 @@ public class Client {
     }
   }
 
+  @FunctionalInterface
+  public interface ArrayCallback {
+    void run(int[] array);
+  }
+
+  private ArrayCallback countCallback = null;
 
   /**
    * The global connection socket.
@@ -48,7 +54,7 @@ public class Client {
   private DataOutputStream toServer;
 
   public enum State {
-    Start, Register, Login, Logout, Query, List, Like, Online
+    Start, Register, Login, Logout, List, Like, Online, Count;
   }
 
   private volatile State state = State.Start;
@@ -168,16 +174,6 @@ public class Client {
   }
 
   /**
-   * Query a word and get 'like count'
-   * The like count for multiple dictionary are managed like following:
-   * { "dict_name:count", ... }
-   *
-   * @param word Word to query.
-   */
-  public void query(String word) {
-  }
-
-  /**
    * Request online user list.
    */
   public void list() {
@@ -202,6 +198,31 @@ public class Client {
       toServer.writeInt(uid);
       toServer.writeInt(dict);
       state = State.Like;
+    }
+    catch (IOException e) {
+      System.err.println(e.toString());
+    }
+    finally {
+      stateLock.unlock();
+    }
+  }
+
+  /**
+   * Send count request.
+   * @param word The word to query.
+   * @param dict The dictionaries that need count number.
+   */
+  public void count(String word, int[] dict, ArrayCallback callback) {
+    stateLock.lock();
+    try {
+      toServer.writeUTF(Message.count);
+      toServer.writeUTF(word);
+      toServer.writeInt(dict.length);
+      for (int id : dict) {
+        toServer.writeInt(id);
+      }
+      state = State.Count;
+      countCallback = callback;
     }
     catch (IOException e) {
       System.err.println(e.toString());
@@ -262,8 +283,8 @@ public class Client {
           state = State.Start;
           response.signal();
         }
-        else if (cmd.equals(Message.query)) {
-          assert state == State.Query;
+        else if (cmd.equals(Message.list)) {
+          assert state == State.List;
           int n = fromServer.readInt();
           for (int i = 0; i < n; i++) {
             System.out.println(fromServer.readUTF());
@@ -271,12 +292,13 @@ public class Client {
           state = State.Online;
           response.signal();
         }
-        else if (cmd.equals(Message.list)) {
-          assert state == State.List;
-          int n = fromServer.readInt();
-          for (int i = 0; i < n; i++) {
-            System.out.println(fromServer.readUTF());
+        else if (cmd.equals(Message.count)) {
+          assert state == State.Count;
+          int[] counts = new int[fromServer.readInt()];
+          for (int i = 0; i < counts.length; i++) {
+            counts[i] = fromServer.readInt();
           }
+          countCallback.run(counts);
           state = State.Online;
           response.signal();
         }
@@ -306,9 +328,6 @@ public class Client {
       }
       else if (cmd.equals(Message.login)) {
         inst.login(arg[1], arg[2]);
-      }
-      else if (cmd.equals(Message.query)) {
-        inst.query(arg[1]);
       }
       else if (cmd.equals(Message.logout)) {
         inst.logout();

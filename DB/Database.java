@@ -172,8 +172,17 @@ public class Database {
         Statement stmt = conn.createStatement()
     ) {
       for (int i = 0; i < dictID.length; i++) {
-        ResultSet rs = stmt.executeQuery("select count from count where word='" + word + " and dict_id=" + dictID[i]);
-        counts[i] = rs.getInt("count");
+        String sql = "select count from count where word='" + word + "' and dict_id=" + dictID[i];
+        System.out.println(sql);
+        ResultSet rs = stmt.executeQuery(sql);
+        if (rs.next()) {
+          counts[i] = rs.getInt("count");
+        }
+        else {
+          System.err.println("dict id " + dictID[i] + " not found");
+          counts[i] = 0;
+        }
+        rs.close();
       }
     }
     catch (SQLException e) {

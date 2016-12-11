@@ -7,8 +7,6 @@ class Message {
 
   static final String login =  "login";
 
-  static final String query = "query";
-
   static final String list = "list";
 
   static final String logout = "logout";
@@ -18,4 +16,6 @@ class Message {
   static final String notifyLogout = "notifyLogout";
 
   static final String like = "like";
+
+  static final String count = "count";
 }

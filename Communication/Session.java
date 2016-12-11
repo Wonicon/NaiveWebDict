@@ -51,10 +51,10 @@ class Session implements Runnable {
 
     handlerMap.put(Message.register, this::register);
     handlerMap.put(Message.login, this::login);
-    handlerMap.put(Message.query, this::query);
     handlerMap.put(Message.logout, this::logout);
     handlerMap.put(Message.list, this::list);
     handlerMap.put(Message.like, this::like);
+    handlerMap.put(Message.count, this::count);
   }
 
   private void register() {
@@ -154,31 +154,6 @@ class Session implements Runnable {
     }
   }
 
-  private void query() {
-    try {
-      String username = fromClient.readUTF();
-      String word = fromClient.readUTF();
-      System.out.println(sessionID + ".query.username: " + username);
-      System.out.println(sessionID + ".query.word: " + word);
-      // TODO check username existence and password coherence.
-      String[] results = {"A", "B", "C"};
-      outLock.lock();
-      try {
-        toClient.writeUTF(Message.query);
-        toClient.writeInt(results.length);
-        for (String s : results) {
-          toClient.writeUTF(s);
-        }
-      }
-      finally {
-        outLock.unlock();
-      }
-    }
-    catch (IOException e) {
-      System.err.println("Failed to handle register task");
-    }
-  }
-
   private void like() {
     try {
       String word = fromClient.readUTF();
@@ -195,11 +170,38 @@ class Session implements Runnable {
   /**
    * Service count request.
    *
-   * -> CMD.count, n, id1, id2, ..., idn
+   * -> CMD.count, word, n, id1, id2, ..., idn
    * <- CMD.count, n, n1, n2, ..., nn.
    */
   private void count() {
-
+    // Receive
+    try {
+      String word = fromClient.readUTF();
+      int n = fromClient.readInt();
+      int[] dicts = new int[n];
+      for (int i = 0; i < dicts.length; i++) {
+        dicts[i] = fromClient.readInt();
+      }
+      int[] counts = Server.db.queryCount(word, dicts);
+      // Send
+      outLock.lock();
+      try {
+        toClient.writeUTF(Message.count);
+        toClient.writeInt(counts.length);
+        for (int cnt : counts) {
+          toClient.writeInt(cnt);
+        }
+      }
+      catch (IOException e) {
+        System.err.println(e.toString());
+      }
+      finally {
+        outLock.unlock();
+      }
+    }
+    catch (IOException e) {
+      System.err.println(e.toString());
+    }
   }
 
   /**
