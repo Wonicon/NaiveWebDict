@@ -12,18 +12,23 @@ public class BaiduDict extends Dict {
 
   @Override
   protected String URL(String word) {
-    return "http://dict.baidu.com/s?wd=" + word;
+    return "http://www.iciba.com/" + word;
   }
 
   @Override
   protected Elements getDefList(Document doc) {
-    return doc.getElementById("simple_means-wrapper")
-              .getElementsByClass("en-content")
-              .first().child(0).children();
+    return doc.getElementsByClass("in-base").first().children().get(1).children();
   }
 
   @Override
-  protected Definition parseDef(Element p) {
-    return new Definition(p.child(0).text(), p.child(1).text());
+  protected Definition parseDef(Element li) {
+    return new Definition(li.child(0).text(), li.child(1).text());
+  }
+
+  public static void main(String[] args) {
+    Dict a = new BaiduDict();
+    a.setWord("hello");
+    a.query();
+    System.out.println(a);
   }
 }

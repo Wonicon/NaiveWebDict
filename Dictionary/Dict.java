@@ -8,7 +8,7 @@ import org.jsoup.select.Elements;
 import java.io.IOException;
 import java.util.ArrayList;
 
-abstract class Dict implements Runnable {
+public abstract class Dict implements Runnable {
   private Definition[] definitions;
 
   private String word;
@@ -62,7 +62,7 @@ abstract class Dict implements Runnable {
     return this;
   }
 
-  Dict() {
+  public Dict() {
     definitions = null;
     word = null;
   }

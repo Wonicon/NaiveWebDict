@@ -4,7 +4,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-class BingDict extends Dict {
+public class BingDict extends Dict {
   @Override
   public String getSource() {
     return "Bing";
