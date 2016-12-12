@@ -5,6 +5,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.cell.TextFieldListCell?>
 <GridPane fx:controller="GUI.MainController" xmlns:fx="http://javafx.com/fxml" hgap="10" vgap="10">
     <VBox>
         <HBox>
@@ -20,19 +21,19 @@
             <CheckBox fx:id="netEaseSel" text="netEase" selected="true" />
         </HBox>
 
-        <HBox>
+        <HBox fx:id="BingBox" >
             <Label text="Bing" />
             <Label fx:id="bingCount" />
             <Button fx:id="bingBtn" text="like" onAction="#likeBing" />
         </HBox>
 
-        <HBox>
+        <HBox fx:id="BaiduBox" >
             <Label text="Baidu" />
             <Label fx:id="baiduCount" />
             <Button fx:id="baiduBtn" text="like" onAction="#likeBaidu" />
         </HBox>
 
-        <HBox>
+        <HBox fx:id="NetEaseBox" >
             <Label text="NetEase" />
             <Label fx:id="netEaseCount" />
             <Button fx:id="netEaseBtn" text="like" onAction="#likeNetEase" />
