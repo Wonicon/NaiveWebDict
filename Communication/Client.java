@@ -42,7 +42,14 @@ public class Client {
     void run(int[] array);
   }
 
+  @FunctionalInterface
+  public interface BoolCallback {
+    void run(boolean cond);
+  }
+
   private ArrayCallback countCallback = null;
+
+  private BoolCallback loginCallback = null;
 
   /**
    * The global connection socket.
@@ -129,7 +136,7 @@ public class Client {
    * @param username Username
    * @param password Password
    */
-  public void login(String username, String password) {
+  public void login(String username, String password, BoolCallback callback) {
     stateLock.lock();
     try {
       if (state == State.Start) {
@@ -138,6 +145,7 @@ public class Client {
         toServer.writeUTF(password);
         this.username = username;
         state = State.Login;
+        loginCallback = callback;
       }
       else {
         System.out.println("Logout first or wait other request to be answered");
@@ -277,6 +285,9 @@ public class Client {
               username = "";
               state = State.Start;
             }
+            if (loginCallback != null) {
+              loginCallback.run(uid > 0);
+            }
             response.signal();
             break;
           case Message.logout:
@@ -330,7 +341,7 @@ public class Client {
           inst.register(arg[1], arg[2]);
           break;
         case Message.login:
-          inst.login(arg[1], arg[2]);
+          inst.login(arg[1], arg[2], null);
           break;
         case Message.logout:
           inst.logout();

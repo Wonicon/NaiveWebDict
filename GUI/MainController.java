@@ -11,11 +11,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Controller {
-  @FXML private TextField username;
-
-  @FXML private PasswordField password;
-
+public class MainController {
   @FXML private CheckBox bingSel, baiduSel, netEaseSel;
 
   @FXML private TextField word;
@@ -53,18 +49,9 @@ public class Controller {
   }
 
   @FXML
-  void register() {
-    App.model.register(username.getText(), password.getText());
-  }
-
-  @FXML
-  void login() {
-    App.model.login(username.getText(), password.getText());
-  }
-
-  @FXML
   void logout() {
     App.model.logout();
+    App.Window.setScene(App.Welcome);
   }
 
   @FXML
