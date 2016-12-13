@@ -1,5 +1,6 @@
 package Dictionary;
 
+import jdk.nashorn.internal.objects.annotations.Function;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -81,9 +82,23 @@ public abstract class Dict implements Runnable {
     return sb.toString();
   }
 
+  @FunctionalInterface
+  public interface StringCallback {
+    void run(String wordCard);
+  }
+
+  private StringCallback callback = null;
+
+  public void setCallback(StringCallback callback) {
+    this.callback = callback;
+  }
+
   @Override
   public void run() {
     query();
+    if (callback != null) {
+      callback.run(this.toString());
+    }
   }
 
   public abstract String getSource();

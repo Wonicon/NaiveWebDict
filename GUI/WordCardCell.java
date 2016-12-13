@@ -2,10 +2,9 @@ package GUI;
 
 import javafx.scene.control.ListCell;
 
-public class WordCardCell extends ListCell<WordCardController> {
+public class WordCardCell extends ListCell<WordCard> {
   @Override
-  public void updateItem(WordCardController wordCard, boolean empty) {
-    System.out.println("hello");
+  public void updateItem(WordCard wordCard, boolean empty) {
     super.updateItem(wordCard, empty);
     if (empty) {
       setText(null);

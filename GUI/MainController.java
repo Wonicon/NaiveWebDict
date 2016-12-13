@@ -2,108 +2,43 @@ package GUI;
 
 import Dictionary.BaiduDict;
 import Dictionary.BingDict;
-import Dictionary.Dict;
 import Dictionary.NetEaseDict;
 
+import javafx.fxml.FXML;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.control.*;
-import javafx.scene.layout.Background;
-import javafx.scene.layout.BackgroundFill;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
+import javafx.scene.control.TextField;
 import javafx.scene.control.ListView;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import javafx.scene.layout.HBox;
 
 public class MainController {
-  @FXML public HBox BingBox;
-
-  @FXML public HBox BaiduBox;
-
-  @FXML public HBox NetEaseBox;
-
-  @FXML private CheckBox bingSel, baiduSel, netEaseSel;
-
-  @FXML private TextField word;
-
-  @FXML private Label bingCount, baiduCount, netEaseCount;
-
-  @FXML private Button bingBtn, baiduBtn, netEaseBtn;
-
-  private final String bing = "Bing", baidu = "Baidu", netEase = "NetEase";
-
-  private Dict bingDict = new BingDict();
-
-  private Dict baiduDict = new BaiduDict();
-
-  private Dict netEaseDict = new NetEaseDict();
-
-  private Map<String, Integer> dictMap = new HashMap<>();
-
-  private Map<String, Label> labelMap = new HashMap<>();
-
-  private Map<String, Button> btnMap = new HashMap<>();
-
-  private Map<String, Dict> spiderMap = new HashMap<>();
-
-  private final String[] dictNames = {
-    bing, baidu, netEase
-  };
-
-  private final int[] dictIDs = {
-    1, 2, 3
-  };
+  @FXML
+  public HBox dictSel;
 
   @FXML
-  private ListView<WordCardController> dictList;
+  private TextField word;
 
-  private ObservableList<WordCardController> wordCardControllers;
+  private WordCard[] wordCards = {
+      new WordCard(1, new BingDict()),
+      new WordCard(2, new BaiduDict()),
+      new WordCard(3, new NetEaseDict()),
+  };
+
+  private ObservableList<WordCard> observeWordCards;
+
+  @FXML
+  private ListView<WordCard> wordCardList;
 
   @FXML
   public void initialize() {
-    dictMap.put(bing, 1);
-    dictMap.put(baidu, 2);
-    dictMap.put(netEase, 3);
-
-    labelMap.put(bing, bingCount);
-    labelMap.put(baidu, baiduCount);
-    labelMap.put(netEase, netEaseCount);
-
-    btnMap.put(bing, bingBtn);
-    btnMap.put(baidu, baiduBtn);
-    btnMap.put(netEase, netEaseBtn);
-
-    spiderMap.put(bing, bingDict);
-    spiderMap.put(baidu, baiduDict);
-    spiderMap.put(netEase, netEaseDict);
-
-    bingSel.setId(bing);
-    baiduSel.setId(baidu);
-    netEaseSel.setId(netEase);
-
-    WordCardController[] wordCards = new WordCardController[dictNames.length];
-    for (int i = 0; i < wordCards.length; i++) {
-      FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("WordCard.fxml"));
-      try {
-        fxmlLoader.load();
-      }
-      catch (IOException e) {
-        e.printStackTrace();
-      }
-      wordCards[i] = fxmlLoader.getController();
-      wordCards[i].setName(dictNames[i], dictIDs[i]);
+    observeWordCards = FXCollections.observableArrayList();
+    wordCardList.setItems(observeWordCards);
+    wordCardList.setCellFactory((ListView<WordCard> list) -> new WordCardCell());
+    for (WordCard card : wordCards) {
+      dictSel.getChildren().add(card.getCheckbox());
+      card.setList(observeWordCards);
     }
-    wordCardControllers = FXCollections.observableArrayList(wordCards);
-    dictList.setItems(wordCardControllers);
-    dictList.setCellFactory((ListView<WordCardController> list) -> new WordCardCell());
   }
 
   @FXML
@@ -112,74 +47,40 @@ public class MainController {
     App.Window.setScene(App.Welcome);
   }
 
+  private boolean allowAll() {
+    boolean r = true;
+    for (WordCard wordCard : wordCards) {
+      r = r && !wordCard.isEnable();
+    }
+    return r;
+  }
+
   @FXML
   public void count() {
-    ArrayList<Integer> dicts = new ArrayList<>();
-    ArrayList<Label> labels = new ArrayList<>();
-    ArrayList<Button> btns = new ArrayList<>();
-    ArrayList<Thread> tasks = new ArrayList<>();
-    ArrayList<Dict> spiders = new ArrayList<>();
-    for (CheckBox cb : new CheckBox[] { bingSel, baiduSel, netEaseSel }) {
-      if (cb.isSelected()) {
-        dicts.add(dictMap.get(cb.getId()));
-        labels.add(labelMap.get(cb.getId()));
-        btns.add(btnMap.get(cb.getId()));
-        Dict dict = spiderMap.get(cb.getId());
-        dict.setWord(word.getText());
-        tasks.add(new Thread(dict));
-        spiders.add(dict);
-      }
+    wordCardList.setVisible(true);
+    observeWordCards.clear();
+    if (allowAll()) {
+      observeWordCards.addAll(wordCards);
     }
-
-    // Fool...
-    int[] dictsArray = new int[dicts.size()];
-    for (int i = 0; i < dictsArray.length; i++) {
-      dictsArray[i] = dicts.get(i);
-    }
-
-    // We cannot directly change the UI elements in other threads. So there is a embedded callback.
-    App.model.count(word.getText(), dictsArray, (int[] counts) -> Platform.runLater(() -> {
-      for (int i = 0; i < counts.length; i++) {
-        if (counts[i] < 0) {
-          btns.get(i).setBackground(new Background(new BackgroundFill(Color.RED, null, null)));
-          labels.get(i).setText(Integer.toString(-counts[i]));
-        }
-        else {
-          btns.get(i).setBackground(new Background(new BackgroundFill(Color.WHITE, null, null)));
-          labels.get(i).setText(Integer.toString(counts[i]));
+    else {
+      for (WordCard wordCard : wordCards) {
+        if (wordCard.isEnable()) {
+          observeWordCards.add(wordCard);
         }
       }
-    }));
-
-    tasks.forEach(Thread::start);
-    try {
-      for (Thread task : tasks) {
-        task.join();
-      }
     }
-    catch (InterruptedException e) {
-      e.printStackTrace();
+
+    for (WordCard wordCard : wordCards) {
+      wordCard.query(word.getText());
     }
-    spiders.forEach(System.out::println);
-  }
 
-  private void like(String dict) {
-    App.model.like(word.getText(), dictMap.get(dict));
-    count();
-  }
-
-  @FXML
-  public void likeBing() {
-    like(bing);
-  }
-
-  @FXML
-  public void likeBaidu() {
-    like(baidu);
-  }
-
-  @FXML
-  public void likeNetEase() {
-    like(netEase);
+    App.model.count(word.getText(), observeWordCards.stream().mapToInt(WordCard::getId).toArray(),
+        counts -> Platform.runLater(() -> {
+          for (int i = 0; i < counts.length; i++) {
+            observeWordCards.get(i).setCount(counts[i] < 0 ? -counts[i] : counts[i], counts[i] < 0);
+          }
+          observeWordCards.sort((left, right) -> right.getCount() - left.getCount());
+        })
+    );
   }
 }
