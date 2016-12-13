@@ -25,6 +25,11 @@ public class NetEaseDict extends Dict {
   @Override
   protected Definition parseDef(Element li) {
     String[] s = li.text().split(" ", 2);
-    return new Definition(s[0], s[1]);
+    if (s.length == 2) {
+      return new Definition(s[0], s[1]);
+    }
+    else {
+      return new Definition("", s[0]);
+    }
   }
 }
