@@ -4,14 +4,21 @@ import Dictionary.BaiduDict;
 import Dictionary.BingDict;
 import Dictionary.Dict;
 import Dictionary.NetEaseDict;
+
 import javafx.application.Platform;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.scene.control.*;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.scene.control.ListView;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -47,9 +54,21 @@ public class MainController {
 
   private Map<String, Dict> spiderMap = new HashMap<>();
 
+  private final String[] dictNames = {
+    bing, baidu, netEase
+  };
+
+  private final int[] dictIDs = {
+    1, 2, 3
+  };
+
+  @FXML
+  private ListView<WordCardController> dictList;
+
+  private ObservableList<WordCardController> wordCardControllers;
+
   @FXML
   public void initialize() {
-    System.out.println("hello");
     dictMap.put(bing, 1);
     dictMap.put(baidu, 2);
     dictMap.put(netEase, 3);
@@ -69,6 +88,22 @@ public class MainController {
     bingSel.setId(bing);
     baiduSel.setId(baidu);
     netEaseSel.setId(netEase);
+
+    WordCardController[] wordCards = new WordCardController[dictNames.length];
+    for (int i = 0; i < wordCards.length; i++) {
+      FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("WordCard.fxml"));
+      try {
+        fxmlLoader.load();
+      }
+      catch (IOException e) {
+        e.printStackTrace();
+      }
+      wordCards[i] = fxmlLoader.getController();
+      wordCards[i].setName(dictNames[i], dictIDs[i]);
+    }
+    wordCardControllers = FXCollections.observableArrayList(wordCards);
+    dictList.setItems(wordCardControllers);
+    dictList.setCellFactory((ListView<WordCardController> list) -> new WordCardCell());
   }
 
   @FXML

@@ -1,0 +1,13 @@
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox fx:id="card" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GUI.WordCardController">
+    <HBox spacing="10" alignment="BASELINE_CENTER">
+        <Label fx:id="dictName" text="Unknown"/>
+        <Label fx:id="likeCount" text="0" />
+        <Button fx:id="likeBtn" text="like" />
+    </HBox>
+    <Label fx:id="def" wrapText="true" text="N/A"/>
+</VBox>

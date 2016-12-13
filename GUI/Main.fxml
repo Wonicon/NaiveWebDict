@@ -5,9 +5,9 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.CheckBox?>
-<?import javafx.scene.control.cell.TextFieldListCell?>
+<?import javafx.scene.control.ListView?>
 <GridPane fx:controller="GUI.MainController" xmlns:fx="http://javafx.com/fxml" hgap="10" vgap="10">
-    <VBox>
+    <VBox maxWidth="Infinity">
         <HBox>
             <Button text="logout" onAction="#logout" />
             <Button text="query" onAction="#count" />
@@ -38,6 +38,7 @@
             <Label fx:id="netEaseCount" />
             <Button fx:id="netEaseBtn" text="like" onAction="#likeNetEase" />
         </HBox>
-    </VBox>
 
+        <ListView fx:id="dictList" maxWidth="Infinity"/>
+    </VBox>
 </GridPane>
