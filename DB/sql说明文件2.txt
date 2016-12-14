@@ -1,18 +1,18 @@
-ÓÃÓÚ´æ·Åµ¥´Ê¿¨ĞÅÏ¢µÄ±íword_card
-½á¹¹£º
+ç”¨äºå­˜æ”¾å•è¯å¡ä¿¡æ¯çš„è¡¨word_card
+ç»“æ„ï¼š
 {
-    username varchar(20),//»ñµÃ¿¨Æ¬µÄÓÃ»§Ãû
-    details varchar(200),//µ¥´Ê¿¨Ï¸½Ú£¨´ÊÓï+½âÊÍ£©
-    sender varchar(20),//·¢ËÍ¿¨Æ¬·½
+    username varchar(20),//è·å¾—å¡ç‰‡çš„ç”¨æˆ·å
+    details varchar(200),//å•è¯å¡ç»†èŠ‚ï¼ˆè¯è¯­+è§£é‡Šï¼‰
+    sender varchar(20),//å‘é€å¡ç‰‡æ–¹
 }
 
-ÅäÖÃÇ°Ìá£ºËµÃ÷ÎÄ¼ş1µÄÅäÖÃÒÑ¾­Íê³É
-ÅäÖÃ´úÂë
-use database;
+é…ç½®å‰æï¼šè¯´æ˜æ–‡ä»¶1çš„é…ç½®å·²ç»å®Œæˆ
+é…ç½®ä»£ç 
+use dict;
 create table word_card
 (
-    username varchar(20),//»ñµÃ¿¨Æ¬µÄÓÃ»§Ãû
-    details varchar(200),//µ¥´Ê¿¨Ï¸½Ú£¨´ÊÓï+½âÊÍ£©
-    sender varchar(20),//·¢ËÍ¿¨Æ¬·½
+    username varchar(20),//è·å¾—å¡ç‰‡çš„ç”¨æˆ·å
+    details varchar(200),//å•è¯å¡ç»†èŠ‚ï¼ˆè¯è¯­+è§£é‡Šï¼‰
+    sender varchar(20),//å‘é€å¡ç‰‡æ–¹
     primary key(user,details,sender)
 );
