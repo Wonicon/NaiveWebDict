@@ -27,36 +27,51 @@ public class Database {
   }
 
   /**
+   * Describe a class of procedure that may throw SQLException
+   */
+  @FunctionalInterface
+  private interface SQLProcedure<T> {
+    T run(Statement stmt) throws SQLException;
+  }
+
+  /**
+   * A decorator that performs the common procedure to build connection to database.
+   * @param callback The actual sql logic.
+   */
+  private <T> T sqlContext(T defaultValue, SQLProcedure<T> callback) {
+    try (
+        Connection conn = DriverManager.getConnection(url, user, control_password);
+        Statement stmt = conn.createStatement()
+    ) {
+      return callback.run(stmt);
+    }
+    catch (SQLException e) {
+      System.err.println(e.toString());
+    }
+    return defaultValue;
+  }
+
+  /**
    * Insert a new user record into the user table
    * @param username Unique username.
    * @param password Password in plain text.
    * @return True if registered, false if the username exists.
    */
-  public boolean register(String username, String password) {
-    boolean result = false;
-    String sql = "select password from user where username=\"" + username + "\";";
-    try (
-        Connection conn = DriverManager.getConnection(url, user, control_password);
-        Statement stmt = conn.createStatement();
-        ResultSet rs = stmt.executeQuery(sql)
-    ) {
+  public boolean register(String username, String password) { return sqlContext(false, stmt -> {
+    String sql = "select password from user where username='" + username + "'";
+    try (ResultSet rs = stmt.executeQuery(sql)) {
       if (rs.next()) {
         System.out.println("User " + username + " already exists.");
+        return false;
       }
       else {
         stmt.executeUpdate(String.format(
-            "insert into user (username, password, login) values ('%s', '%s', false);",
-            username, password
+            "insert into user (username, password, login) values ('%s', '%s', false)", username, password
         ));
-        result = true;
+        return true;
       }
     }
-    catch (SQLException e) {
-      System.err.println("Failed to execute register query for " + username);
-      System.err.println(e.toString());
-    }
-    return result;
-  }
+  });}
 
   /**
    * Check password to allow login, and update the login state.
@@ -64,78 +79,55 @@ public class Database {
    * @param password Password in plain text.
    * @return The unique uid to identify the user for future requests. 0 means login failed.
    */
-  public int login(String username, String password) {
-    int uid = 0;
-    String sql = "select uid, password, login from user where username=\"" + username + "\";";
-    try (
-        Connection conn = DriverManager.getConnection(url, user, control_password);
-        Statement stmt = conn.createStatement();
-        ResultSet rs = stmt.executeQuery(sql)
-    ) {
+  public int login(String username, String password) { return sqlContext(0, stmt -> {
+    String sql = "select uid, password, login from user where username='" + username + "'";
+    try (ResultSet rs = stmt.executeQuery(sql)) {
       if (!rs.next()) {
         System.out.println("User " + username + " not found");
+        return 0;
       }
       else {
         String realPassword = rs.getString("password");
         int logged = Integer.parseInt(rs.getString("login"));
-        int uidTemp = Integer.parseInt(rs.getString("uid"));
+        int uid = Integer.parseInt(rs.getString("uid"));
         if (realPassword.equals(password) && logged == 0) {
-          stmt.executeUpdate("update user set login=1 where username=\"" + username + "\";");
-          uid = uidTemp;
+          stmt.executeUpdate("update user set login=true where username='" + username + "'");
           System.out.println("User " + username + " login successfully");
+          return uid;
         }
         else {
           System.out.println("User " + username + "'s password is not correct");
+          return 0;
         }
       }
     }
-    catch (SQLException e) {
-      System.err.println("Failed to execute login query for " + username + ": " + e.toString());
-    }
-    return uid;
-  }
+  });}
 
-  public void logout(int uid) {
-    try (
-        Connection conn = DriverManager.getConnection(url, user, control_password);
-        Statement stmt = conn.createStatement()
-    ) {
-      stmt.executeUpdate("update user set login=false where uid=\"" + uid + "\";");
-    }
-    catch (SQLException e) {
-      System.err.println("Failed to execute login query for uid" + uid + ": " + e.toString());
-    }
-  }
+  public void logout(int uid) { sqlContext(0,stmt ->
+      stmt.executeUpdate("update user set login=false where uid=" + uid)
+  );}
 
-  public boolean likeWord(String word, int uid, int source) {
-    boolean result = false;
-    try (
-        Connection conn = DriverManager.getConnection(url, user, control_password);
-        Statement stmt = conn.createStatement();
-        ResultSet rs = stmt.executeQuery("select * from user_like where uid=\"" + uid + "\" and word=\"" + word + "\" and dict_id=" + source + ";")
-    ) {
+  public void likeWord(String word, int uid, int source) { sqlContext(false, stmt -> {
+    try (ResultSet rs = stmt.executeQuery("select * from user_like where uid=" + uid + " and word='" + word + "' and dict_id=" + source)) {
       if (!rs.next()) {  // 判断是否点赞
-        stmt.executeUpdate("insert into user_like (word, uid, dict_id) values('" + word + "'," + uid + "," + source + ");");
-        String sql = "select * from count where word=\"" + word + "\" and dict_id=" + source + ";";
-        if (!stmt.executeQuery(sql).next()) { // 如果从来没有人点过生成新的count
-          stmt.executeUpdate("insert count (word, dict_id, count) values(\"" + word + "\"," + source + ",1);");
+        stmt.executeUpdate("insert into user_like (word, uid, dict_id) values('" + word + "'," + uid + "," + source + ")");
+        if (!stmt.executeQuery("select * from count where word='" + word + "' and dict_id=" + source).next()) {
+          // 如果从来没有人点过生成新的count
+          stmt.executeUpdate("insert count (word, dict_id, count) values('" + word + "'," + source + ",1)");
         }
-        else {  // 已经存在则进行 update
-          stmt.executeUpdate("update count set count=count+1 where word=\"" + word + "\" and dict_id=" + source + ";");
+        else {
+          // 已经存在则进行 update
+          stmt.executeUpdate("update count set count=count+1 where word='" + word + "' and dict_id=" + source);
         }
-        result = true;  // 成功点赞
+        return true;
       }
       else {  // 取消点赞
-        stmt.executeUpdate("delete from user_like where uid=\"" + uid + "\" and word=\"" + word + "\" and dict_id=" + source);
-        stmt.executeUpdate("update count set count=count-1 where word=\"" + word + "\" and dict_id=" + source);
+        stmt.executeUpdate("delete from user_like where uid='" + uid + "' and word='" + word + "' and dict_id=" + source);
+        stmt.executeUpdate("update count set count=count-1 where word='" + word + "' and dict_id=" + source);
+        return false;
       }
     }
-    catch (SQLException e) {
-      System.err.println(e.toString());
-    }
-
-    return result;
-  }
+  });}
 
   /**
    * Retrieve the `like' counts from a sequence of dictionaries.
@@ -143,16 +135,12 @@ public class Database {
    * @param dictID Dictionary id series.
    * @return The `like' count array in the same order of <code>dictID</code>.
    */
-  public int[] queryCount(String word, int[] dictID, int uid) {
+  public int[] queryCount(String word, int[] dictID, int uid) { return sqlContext(null, stmt -> {
     int[] counts = new int[dictID.length];
-    try (
-        Connection conn = DriverManager.getConnection(url, user, control_password);
-        Statement stmt = conn.createStatement()
-    ) {
-      for (int i = 0; i < dictID.length; i++) {
-        String sql = "select count from count where word='" + word + "' and dict_id=" + dictID[i];
-        System.out.println(sql);
-        ResultSet rs = stmt.executeQuery(sql);
+    for (int i = 0; i < dictID.length; i++) {
+      String sql = "select count from count where word='" + word + "' and dict_id=" + dictID[i];
+      System.out.println(sql);
+      try (ResultSet rs = stmt.executeQuery(sql)) {
         if (rs.next()) {
           counts[i] = rs.getInt("count");
           if (queryUser(word, uid, dictID[i])) {
@@ -163,14 +151,10 @@ public class Database {
           System.err.println("dict id " + dictID[i] + " not found");
           counts[i] = 0;
         }
-        rs.close();
       }
     }
-    catch (SQLException e) {
-      System.err.println(e.toString());
-    }
     return counts;
-  }
+  });}
 
   /**
    * Query whether a user like a word's explanation from a specific dictionary.
@@ -179,41 +163,16 @@ public class Database {
    * @param source The id for the dictionary.
    * @return <code>true</code> if the entry exists, <code>false</code> otherwise.
    */
-  public boolean queryUser(String word, int uid, int source) {
-    boolean result = false;
-    try (
-        Connection conn = DriverManager.getConnection(url, user, control_password);
-        Statement stmt = conn.createStatement()
-    ) {
-      String sql = "select * from user_like where uid=" + uid + " and word='" + word + "' and dict_id=" + source;
-      System.out.println(sql);
-      result = stmt.executeQuery(sql).next();
-      System.out.println(result);
-    }
-    catch (SQLException e) {
-      System.err.println(e.toString());
-    }
-    return result;
-  }
+  public boolean queryUser(String word, int uid, int source) { return sqlContext(false, stmt -> {
+    String sql = "select * from user_like where uid=" + uid + " and word='" + word + "' and dict_id=" + source;
+    return stmt.executeQuery(sql).next();
+  });}
 
-  public boolean insertWordCard(String sender, String receiver, String content) {
-    boolean result = false;
-    try (
-        Connection conn = DriverManager.getConnection(url, user, control_password);
-        Statement stmt = conn.createStatement()
-    ) {
-      stmt.executeUpdate(String.format(
-          "insert into word_card (sender, receiver, content, received) values ('%s', '%s', '%s', false);",
-          sender, receiver, content));
-      stmt.close();
-      conn.close();
-      result = true;
-    }
-    catch (SQLException e) {
-      System.err.println(e.toString());
-    }
-    return result;
-  }
+  public void insertWordCard(String sender, String receiver, String content) { sqlContext(false, stmt -> {
+    stmt.executeUpdate("insert into word_card (sender, receiver, content, received)"
+            + "values ('" + sender + "','" + receiver + "','" + content + "', false)");
+    return true;
+  });}
 
   public ResultSet getUnreceivedWordCard(String receiver) throws SQLException {
     String sql = String.format("select * from word_card where receiver='%s' and received=false", receiver);
@@ -227,4 +186,9 @@ public class Database {
       return null;//没结果有的时候mysql会返回奇怪的东西所以这里手动返回null
     }
   }
+
+  public void confirmReceived(String receiver, int cardID) { sqlContext(false, stmt -> {
+    stmt.executeUpdate("update word_card set received=true where receiver='" + receiver + "' and id=" + cardID);
+    return true;
+  });}
 }
