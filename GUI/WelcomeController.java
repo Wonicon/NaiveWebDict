@@ -20,6 +20,7 @@ public class WelcomeController {
     App.model.login(username.getText(), password.getText(), (boolean auth) -> Platform.runLater(() -> {
       if (auth) {
         App.Window.setScene(App.Main);
+        //App.Window.setTitle(username.getText());
       }
     }));
   }

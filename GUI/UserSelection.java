@@ -8,6 +8,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 
 /**
  * This class handle the selection of online users and interaction with them.
@@ -45,5 +46,7 @@ public class UserSelection {
     else {
       System.out.println("Select a user");
     }
+
+    ((Stage)root.getScene().getWindow()).close();
   }
 }

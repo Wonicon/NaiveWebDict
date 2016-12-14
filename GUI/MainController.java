@@ -36,6 +36,8 @@ public class MainController {
   @FXML
   private ListView<WordCard> wordCardList;
 
+  private MessageController msgController;
+
   /**
    * Add dynamic elements to the list view and other containers.
    */
@@ -59,6 +61,16 @@ public class MainController {
     for (WordCard card : wordCards) {
       dictSel.getChildren().add(card.getCheckbox());
       card.setList(observeWordCards);
+    }
+
+    try {
+      FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("Message.fxml"));
+      fxmlLoader.load();
+      msgController = fxmlLoader.getController();
+      App.model.setNotifySendHandler(msgController::add);
+    }
+    catch (IOException e) {
+      System.out.println(e.toString());
     }
   }
 
@@ -122,5 +134,10 @@ public class MainController {
       popup.initModality(Modality.APPLICATION_MODAL);
       popup.show();
     }));
+  }
+
+  @FXML
+  public void showMsg(ActionEvent actionEvent) {
+    msgController.show(((Node)actionEvent.getTarget()).getScene().getWindow());
   }
 }

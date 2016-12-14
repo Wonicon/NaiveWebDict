@@ -10,6 +10,7 @@ import java.util.Scanner;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Function;
 
 public class Client {
   private String username = "";
@@ -40,23 +41,34 @@ public class Client {
   }
 
   @FunctionalInterface
+  public interface NotifySendHandler {
+    void handle(WordCardMessage msg);
+  }
+
+  NotifySendHandler notifySendHandler;
+
+  public void setNotifySendHandler(NotifySendHandler handler) {
+    notifySendHandler = handler;
+  }
+
+  @FunctionalInterface
   public interface ArrayCallback {
     void run(int[] array);
   }
+
+  private ArrayCallback countCallback = null;
 
   @FunctionalInterface
   public interface BoolCallback {
     void run(boolean cond);
   }
 
+  private BoolCallback loginCallback = null;
+
   @FunctionalInterface
   public interface UserListCallback {
     void run(String[] users);
   }
-
-  private ArrayCallback countCallback = null;
-
-  private BoolCallback loginCallback = null;
 
   private UserListCallback userListCallback = null;
 
@@ -306,6 +318,7 @@ public class Client {
           case Message.notifySend:
             WordCardMessage msg = (WordCardMessage)objFromServer.readObject();
             System.out.println(msg.getSender() + " " + msg.getContent());
+            notifySendHandler.handle(msg);
             break;
           // Handle response message.
           case Message.register:

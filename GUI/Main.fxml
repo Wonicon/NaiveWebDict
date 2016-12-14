@@ -10,6 +10,7 @@
             <Button text="logout" onAction="#logout" />
             <Button text="query" onAction="#count" />
             <Button text="list" onAction="#list" />
+            <Button text="msg" onAction="#showMsg" />
         </HBox>
 
         <TextField fx:id="word" promptText="type a word" />
