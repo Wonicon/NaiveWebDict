@@ -36,11 +36,26 @@ public class MainController {
   @FXML
   private ListView<WordCard> wordCardList;
 
+  /**
+   * Add dynamic elements to the list view and other containers.
+   */
   @FXML
   public void initialize() {
     observeWordCards = FXCollections.observableArrayList();
     wordCardList.setItems(observeWordCards);
-    wordCardList.setCellFactory((ListView<WordCard> list) -> new WordCardCell());
+
+    // Render the cell as the WordCard.fxml describes.
+    wordCardList.setCellFactory(list -> new ListCell<WordCard>(){
+      @Override
+      public void updateItem(WordCard wordCard, boolean empty) {
+        super.updateItem(wordCard, empty);
+        if (!empty) {
+          setGraphic(wordCard.getRoot());
+        }
+      }
+    });
+
+    // Add checkboxes representing the dictionaries.
     for (WordCard card : wordCards) {
       dictSel.getChildren().add(card.getCheckbox());
       card.setList(observeWordCards);
