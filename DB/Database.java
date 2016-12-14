@@ -171,11 +171,10 @@ public class Database {
     return stmt.executeQuery(sql).next();
   });}
 
-  public void insertWordCard(String sender, String receiver, String content) { sqlContext(false, stmt -> {
-    stmt.executeUpdate("insert into word_card (sender, receiver, content, received)"
-            + "values ('" + sender + "','" + receiver + "','" + content + "', false)");
-    return true;
-  });}
+  public void insertWordCard(String sender, String receiver, String content) { sqlContext(0, stmt ->
+      stmt.executeUpdate("insert into word_card (sender, receiver, content, received)"
+            + "values ('" + sender + "','" + receiver + "','" + content + "', false)")
+  );}
 
   public ArrayList<WordCardMessage> getUnreceivedWordCard(String receiver) {
     ArrayList<WordCardMessage> messages = new ArrayList<>();
@@ -183,7 +182,7 @@ public class Database {
     String sql = String.format("select * from word_card where receiver='%s' and received=false", receiver);
     try (ResultSet rs = stmt.executeQuery(sql)) {
       while (rs.next()) {
-        messages.add(new WordCardMessage(rs.getString("sender"), rs.getString("receiver"), rs.getString("content")));
+        messages.add(new WordCardMessage(rs.getInt("card_id"), rs.getString("sender"), rs.getString("receiver"), rs.getString("content")));
       }
     }
     return messages;

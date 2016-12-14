@@ -126,6 +126,10 @@ class Session implements Runnable {
       finally {
         outLock.unlock();
       }
+
+      if (result > 0) {
+        Server.db.getUnreceivedWordCard(username).forEach(this::notifySend);
+      }
     }
     catch (IOException e) {
       System.err.println("Failed to handle register for task " + sessionID);
@@ -280,7 +284,7 @@ class Session implements Runnable {
     try {
       for (Session s : Server.sessions) {
         if (s.getUsername().equals(msg.getReceiver())) {
-          s.notifySend(msg);
+          Server.db.getUnreceivedWordCard(msg.getReceiver()).forEach(this::notifySend);
           break;
         }
       }

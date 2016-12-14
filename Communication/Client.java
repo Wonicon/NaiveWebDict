@@ -10,7 +10,6 @@ import java.util.Scanner;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.function.Function;
 
 public class Client {
   private String username = "";
@@ -278,7 +277,7 @@ public class Client {
       else {
         try {
           toServer.writeUTF(Message.send);
-          objToServer.writeObject(new WordCardMessage(getUsername(), receiver, content));
+          objToServer.writeObject(new WordCardMessage(0, getUsername(), receiver, content));
         }
         catch (Exception e) {
           e.printStackTrace();

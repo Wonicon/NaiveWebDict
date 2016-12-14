@@ -7,6 +7,11 @@ import java.io.Serializable;
  */
 public class WordCardMessage implements Serializable {
   /**
+   * id is the primary key to distinguish each word card message.
+   */
+  private int id;
+
+  /**
    * Sender of this word card.
    */
   private String sender;
@@ -21,7 +26,8 @@ public class WordCardMessage implements Serializable {
    */
   private String content;
 
-  public WordCardMessage(String sender, String receiver, String content) {
+  public WordCardMessage(int id, String sender, String receiver, String content) {
+    this.id = id;
     this.sender = sender;
     this.receiver = receiver;
     this.content = content;
