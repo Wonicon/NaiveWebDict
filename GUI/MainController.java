@@ -23,6 +23,9 @@ public class MainController {
   public HBox dictSel;
 
   @FXML
+  public Button msg;
+
+  @FXML
   private TextField word;
 
   private WordCard[] wordCards = {
@@ -51,9 +54,8 @@ public class MainController {
       @Override
       public void updateItem(WordCard wordCard, boolean empty) {
         super.updateItem(wordCard, empty);
-        if (!empty) {
-          setGraphic(wordCard.getRoot());
-        }
+        setGraphic(empty ? null : wordCard.getRoot());
+        setText(null);
       }
     });
 
@@ -67,7 +69,11 @@ public class MainController {
       FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("Message.fxml"));
       fxmlLoader.load();
       msgController = fxmlLoader.getController();
-      App.model.setNotifySendHandler(msgController::add);
+      msgController.setMainController(this);
+      App.model.setNotifySendHandler(w -> Platform.runLater(() -> {
+        msgController.add(w);
+        msg.setText("msg (new)");
+      }));
     }
     catch (IOException e) {
       System.out.println(e.toString());

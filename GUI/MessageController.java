@@ -8,6 +8,8 @@ import javafx.fxml.FXML;
 import javafx.scene.Scene;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
+import javafx.scene.control.SingleSelectionModel;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -43,6 +45,12 @@ public class MessageController {
    */
   private ObservableList<WordCardMessage> wordCardMessages;
 
+  private MainController mainController;
+
+  public void setMainController(MainController mainController) {
+    this.mainController = mainController;
+  }
+
   /**
    * Customizing the list cell style.
    */
@@ -54,9 +62,8 @@ public class MessageController {
       @Override
       public void updateItem(WordCardMessage msg, boolean empty) {
         super.updateItem(msg, empty);
-        if (!empty) {
-          setText("word card shared by " + msg.getSender());
-        }
+        setText(empty ? null : "word card shared by " + msg.getSender());
+        setGraphic(null);
       }
     });
   }
@@ -67,6 +74,14 @@ public class MessageController {
 
   public void add(WordCardMessage message) {
     wordCardMessages.add(message);
+  }
+
+  @FXML
+  public void remove(WordCardMessage msg) {
+    wordCardMessages.remove(msg);
+    if (wordCardMessages.size() == 0) {
+      mainController.msg.setText("msg");
+    }
   }
 
   public void show(Window prime) {
@@ -80,5 +95,12 @@ public class MessageController {
       msgWindow.setScene(scene);
     }
     msgWindow.show();
+  }
+
+  public void onClick(MouseEvent mouseEvent) {
+    if (mouseEvent.getClickCount() >= 2) {
+      System.out.println("hello");
+      remove(msgListView.getSelectionModel().getSelectedItem());
+    }
   }
 }

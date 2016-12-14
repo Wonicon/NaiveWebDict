@@ -52,7 +52,6 @@ class Session implements Runnable {
       toClient = new DataOutputStream(socket.getOutputStream());
       objToClient = new ObjectOutputStream(socket.getOutputStream());
       objFromClient = new ObjectInputStream(socket.getInputStream());
-      System.out.println("good");
     }
     catch (IOException e) {
       System.err.println(e.toString());
