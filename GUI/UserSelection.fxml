@@ -4,5 +4,5 @@
 <VBox fx:id="root" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GUI.UserSelection">
     <ListView fx:id="userListView">
     </ListView>
-    <Button fx:id="send" text="send"/>
+    <Button fx:id="send" text="send" onAction="#send"/>
 </VBox>

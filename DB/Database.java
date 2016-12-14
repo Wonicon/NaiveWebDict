@@ -1,6 +1,9 @@
 package DB;
 
+import Communication.WordCardMessage;
+
 import java.sql.*;
+import java.util.ArrayList;
 
 public class Database {
   private final static String DBDRIVER = "org.gjt.mm.mysql.Driver";
@@ -174,18 +177,17 @@ public class Database {
     return true;
   });}
 
-  public ResultSet getUnreceivedWordCard(String receiver) throws SQLException {
+  public ArrayList<WordCardMessage> getUnreceivedWordCard(String receiver) {
+    ArrayList<WordCardMessage> messages = new ArrayList<>();
+    return sqlContext(messages, stmt -> {
     String sql = String.format("select * from word_card where receiver='%s' and received=false", receiver);
-    Connection conn = DriverManager.getConnection(url, user, control_password);
-    Statement stmt = conn.createStatement();
-    ResultSet rs = stmt.executeQuery(sql);
-    if(rs.next()) {
-      return rs;//有结果返回结果
+    try (ResultSet rs = stmt.executeQuery(sql)) {
+      while (rs.next()) {
+        messages.add(new WordCardMessage(rs.getString("sender"), rs.getString("receiver"), rs.getString("content")));
+      }
     }
-    else {
-      return null;//没结果有的时候mysql会返回奇怪的东西所以这里手动返回null
-    }
-  }
+    return messages;
+  });}
 
   public void confirmReceived(String receiver, int cardID) { sqlContext(false, stmt -> {
     stmt.executeUpdate("update word_card set received=true where receiver='" + receiver + "' and id=" + cardID);

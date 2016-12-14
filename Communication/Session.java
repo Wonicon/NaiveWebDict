@@ -2,6 +2,8 @@ package Communication;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.ObjectOutputStream;
+import java.io.ObjectInputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.HashMap;
@@ -29,7 +31,11 @@ class Session implements Runnable {
 
   private DataOutputStream toClient;
 
-  Lock outLock = new ReentrantLock();
+  private ObjectInputStream objFromClient;
+
+  private ObjectOutputStream objToClient;
+
+  private Lock outLock = new ReentrantLock();
 
   private int sessionID;
 
@@ -44,9 +50,12 @@ class Session implements Runnable {
     try {
       fromClient = new DataInputStream(socket.getInputStream());
       toClient = new DataOutputStream(socket.getOutputStream());
+      objToClient = new ObjectOutputStream(socket.getOutputStream());
+      objFromClient = new ObjectInputStream(socket.getInputStream());
+      System.out.println("good");
     }
     catch (IOException e) {
-      System.err.println("Session " + sessionID + ": cannot get in/out stream.");
+      System.err.println(e.toString());
     }
 
     handlerMap.put(Message.register, this::register);
@@ -55,6 +64,11 @@ class Session implements Runnable {
     handlerMap.put(Message.list, this::list);
     handlerMap.put(Message.like, this::like);
     handlerMap.put(Message.count, this::count);
+    handlerMap.put(Message.send, this::send);
+  }
+
+  public String getUsername() {
+    return username;
   }
 
   private void register() {
@@ -228,7 +242,6 @@ class Session implements Runnable {
     return users;
   }
 
-
   private void list() {
     Server.sessionsLock.lock();
     String[] list = getOnlineList();
@@ -248,6 +261,33 @@ class Session implements Runnable {
     }
     finally {
       outLock.unlock();
+    }
+  }
+
+  private void send() {
+    // Receive
+    WordCardMessage msg;
+    try {
+      msg = (WordCardMessage)objFromClient.readObject();
+      Server.db.insertWordCard(msg.getSender(), msg.getReceiver(), msg.getContent());
+    }
+    catch (Exception e) {
+      e.printStackTrace();
+      return;
+    }
+
+    // Try to send
+    Server.sessionsLock.lock();
+    try {
+      for (Session s : Server.sessions) {
+        if (s.getUsername().equals(msg.getReceiver())) {
+          s.notifySend(msg);
+          break;
+        }
+      }
+    }
+    finally {
+      Server.sessionsLock.unlock();
     }
   }
 
@@ -276,6 +316,17 @@ class Session implements Runnable {
     }
     finally {
       outLock.unlock();
+    }
+  }
+
+  private void notifySend(WordCardMessage msg) {
+    outLock.lock();
+    try {
+      toClient.writeUTF(Message.notifySend);
+      objToClient.writeObject(msg);
+    }
+    catch (Exception e) {
+      e.printStackTrace();
     }
   }
 

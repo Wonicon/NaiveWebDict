@@ -2,6 +2,8 @@ package Communication;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.ObjectOutputStream;
+import java.io.ObjectInputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.Scanner;
@@ -67,6 +69,10 @@ public class Client {
 
   private DataOutputStream toServer;
 
+  private ObjectInputStream objFromServer;
+
+  private ObjectOutputStream objToServer;
+
   public enum State {
     Start, Register, Login, Logout, List, Like, Online, Count;
   }
@@ -102,6 +108,8 @@ public class Client {
       socket = new Socket("localhost", 8000);
       fromServer = new DataInputStream(socket.getInputStream());
       toServer = new DataOutputStream(socket.getOutputStream());
+      objToServer = new ObjectOutputStream(socket.getOutputStream());
+      objFromServer = new ObjectInputStream(socket.getInputStream());
     }
     catch (IOException e) {
       System.err.println("Connection failed");
@@ -249,6 +257,27 @@ public class Client {
     }
   }
 
+  public void send(String receiver, String content) {
+    stateLock.lock();
+    try {
+      if (state != State.Online) {
+        System.out.println("Login to send message");
+      }
+      else {
+        try {
+          toServer.writeUTF(Message.send);
+          objToServer.writeObject(new WordCardMessage(getUsername(), receiver, content));
+        }
+        catch (Exception e) {
+          e.printStackTrace();
+        }
+      }
+    }
+    finally {
+      stateLock.unlock();
+    }
+  }
+
   /**
    * This method acts as a stand-alone thread to receive server's pushing messages and responses.
    */
@@ -273,6 +302,10 @@ public class Client {
             break;
           case Message.notifyLogout:
             System.out.println(fromServer.readUTF() + " has logged out.");
+            break;
+          case Message.notifySend:
+            WordCardMessage msg = (WordCardMessage)objFromServer.readObject();
+            System.out.println(msg.getSender() + " " + msg.getContent());
             break;
           // Handle response message.
           case Message.register:
@@ -333,6 +366,9 @@ public class Client {
       catch (IOException e) {
         System.err.println("Cannot receive server message");
         break;
+      }
+      catch (ClassNotFoundException e) {
+        System.err.println("Error in receive word card message");
       }
       finally {
         stateLock.unlock();
