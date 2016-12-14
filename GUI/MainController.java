@@ -134,7 +134,7 @@ public class MainController {
       catch (IOException e) {
         e.printStackTrace();
       }
-      ((UserSelection)fxml.getController()).setUserList(users);
+      ((UserSelectionController)fxml.getController()).setUserList(users);
       popup.setScene(new Scene(fxml.getRoot()));
       popup.initOwner(((Node)ev.getTarget()).getScene().getWindow());
       popup.initModality(Modality.APPLICATION_MODAL);

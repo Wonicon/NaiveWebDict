@@ -13,7 +13,7 @@ import javafx.stage.Stage;
 /**
  * This class handle the selection of online users and interaction with them.
  */
-public class UserSelection {
+public class UserSelectionController {
   @FXML
   public VBox root;
 

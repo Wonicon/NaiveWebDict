@@ -14,7 +14,7 @@ import java.io.IOException;
  * combined to a specific online dictionary.
  * Act as a model for WordCardController.
  */
-public class WordCard {
+class WordCard {
   /**
    * <code>id</code> is used to query the server database.
    */
@@ -49,7 +49,7 @@ public class WordCard {
    * @param dictionary The concrete dictionary to perform spider works.
    *                   It provides the name and definitions for words.
    */
-  public WordCard(int id, Dict dictionary) {
+  WordCard(int id, Dict dictionary) {
     this.id = id;
     dict = dictionary;
     dict.setCallback((s) -> Platform.runLater(() -> getController().definitions.setText(s)));
@@ -57,26 +57,42 @@ public class WordCard {
     checkbox.setSelected(true);
   }
 
-  public String getName() {
+  /**
+   * Getter for <code>name</code> field.
+   * @return The name of this word card's dictionary.
+   */
+  String getName() {
     return dict.getSource();
   }
 
-  public int getId() {
+  /**
+   * Getter for <code>id</code> field.
+   * @return The id of this word card's dictionary as the database key.
+   */
+  int getId() {
     return id;
   }
 
-  public CheckBox getCheckbox() {
+  /**
+   * Getter for <code>checkbox</code> field.
+   * @return The checkbox reference.
+   */
+  CheckBox getCheckbox() {
     return checkbox;
   }
 
-  public boolean isEnable() {
+  /**
+   * Check whether the dictionary should query and the card should display.
+   * @return <code>True</code> if the checkbox is selected.
+   */
+  boolean isEnable() {
     return checkbox.isSelected();
   }
 
   /**
    * @return The count on how many people like the dictionary's definitions for the word.
    */
-  public int getCount() {
+  int getCount() {
     return Integer.parseInt(getController().likeCount.getText());
   }
 
@@ -103,15 +119,25 @@ public class WordCard {
    * Tell list view how to display this object.
    * @return The root container of the view.
    */
-  public Node getRoot() {
+  Node getRoot() {
     return getController().root;
   }
 
-  public void setList(ObservableList<WordCard> l) {
-    list = l;
+  /**
+   * Back-reference the upper level observable container of word card itself.
+   * Mainly to simplify the re-sort after like event.
+   * @param list The observable sortable word card list.
+   */
+  void setList(ObservableList<WordCard> list) {
+    this.list = list;
   }
 
-  public void setCount(int count, boolean prefer) {
+  /**
+   * Update the count number displayed in GUI.
+   * @param count The number of user like the definition.
+   * @param prefer Whether this user like the definition.
+   */
+  void setCount(int count, boolean prefer) {
     if (prefer) {
       getController().likeButton.setText("dislike");
     }
@@ -121,13 +147,20 @@ public class WordCard {
     getController().likeCount.setText(Integer.toString(count));
   }
 
-  public void query(String word) {
+  /**
+   * Query the word through network asynchronously.
+   * @param word The word to query.
+   */
+  void query(String word) {
     dict.setWord(word);
     getController().definitions.setText("Getting definition for " + word + "...");
     new Thread(dict).start();
   }
 
-  public void like() {
+  /**
+   * Handle like event. Update the count locally (without re-query) and re-sort the sequence.
+   */
+  void like() {
     App.model.like(dict.getWord(), getId());
     boolean prefer = getController().likeButton.getText().equals("like");
     setCount(Integer.parseInt(getController().likeCount.getText()) + (prefer ? 1 : -1), prefer);
