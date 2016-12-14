@@ -1,10 +1,6 @@
 package Communication;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.ObjectOutputStream;
-import java.io.ObjectInputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
@@ -64,6 +60,7 @@ class Session implements Runnable {
     handlerMap.put(Message.like, this::like);
     handlerMap.put(Message.count, this::count);
     handlerMap.put(Message.send, this::send);
+    handlerMap.put(Message.confirm, this::confirm);
   }
 
   public String getUsername() {
@@ -291,6 +288,15 @@ class Session implements Runnable {
     }
     finally {
       Server.sessionsLock.unlock();
+    }
+  }
+
+  private void confirm() {
+    try {
+      Server.db.confirmReceived(fromClient.readInt());
+    }
+    catch (IOException e) {
+      e.printStackTrace();
     }
   }
 

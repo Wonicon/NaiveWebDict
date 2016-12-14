@@ -99,8 +99,9 @@ public class MessageController {
 
   public void onClick(MouseEvent mouseEvent) {
     if (mouseEvent.getClickCount() >= 2) {
-      System.out.println("hello");
-      remove(msgListView.getSelectionModel().getSelectedItem());
+      WordCardMessage msg = msgListView.getSelectionModel().getSelectedItem();
+      remove(msg);
+      App.model.confirm(msg.getId());
     }
   }
 }

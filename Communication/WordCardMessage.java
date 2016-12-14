@@ -44,4 +44,8 @@ public class WordCardMessage implements Serializable {
   public String getContent() {
     return content;
   }
+
+  public int getId() {
+    return id;
+  }
 }

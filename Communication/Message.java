@@ -15,6 +15,8 @@ class Message {
 
   static final String send = "send";
 
+  static final String confirm = "confirm";
+
   static final String notifyLogin = "notifyLogin";
 
   static final String notifyLogout = "notifyLogout";

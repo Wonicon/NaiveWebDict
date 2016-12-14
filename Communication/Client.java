@@ -290,6 +290,26 @@ public class Client {
   }
 
   /**
+   * Confirm the username received the message distinguished by <code>id</code>
+   * @param id The primary key to distinguish message.
+   */
+  public void confirm(int id) {
+    stateLock.lock();
+    try {
+      while (state != State.Online) await();
+      toServer.writeUTF(Message.confirm);
+      toServer.writeInt(id);
+    }
+    catch (IOException e) {
+      e.printStackTrace();
+    }
+    finally {
+      stateLock.unlock();
+    }
+
+  }
+
+  /**
    * This method acts as a stand-alone thread to receive server's pushing messages and responses.
    */
   private void serverMsgHandler() {

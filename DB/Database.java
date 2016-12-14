@@ -188,8 +188,8 @@ public class Database {
     return messages;
   });}
 
-  public void confirmReceived(String receiver, int cardID) { sqlContext(false, stmt -> {
-    stmt.executeUpdate("update word_card set received=true where receiver='" + receiver + "' and id=" + cardID);
+  public void confirmReceived(int cardID) { sqlContext(false, stmt -> {
+    stmt.executeUpdate("update word_card set received=true where card_id=" + cardID);
     return true;
   });}
 }
