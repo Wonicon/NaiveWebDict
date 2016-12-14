@@ -14,5 +14,4 @@
         <TextField fx:id="username" promptText="username" />
         <PasswordField fx:id="password" />
     </VBox>
-
 </GridPane>

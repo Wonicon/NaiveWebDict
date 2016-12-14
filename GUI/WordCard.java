@@ -98,6 +98,7 @@ public class WordCard {
     }
     return controller;
   }
+
   /**
    * Tell list view how to display this object.
    * @return The root container of the view.

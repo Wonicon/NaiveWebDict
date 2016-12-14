@@ -47,9 +47,16 @@ public class Client {
     void run(boolean cond);
   }
 
+  @FunctionalInterface
+  public interface UserListCallback {
+    void run(String[] users);
+  }
+
   private ArrayCallback countCallback = null;
 
   private BoolCallback loginCallback = null;
+
+  private UserListCallback userListCallback = null;
 
   /**
    * The global connection socket.
@@ -183,12 +190,14 @@ public class Client {
 
   /**
    * Request online user list.
+   * @param userListCallback
    */
-  public void list() {
+  public void list(UserListCallback userListCallback) {
     stateLock.lock();
     try {
       toServer.writeUTF(Message.list);
       state = State.List;
+      this.userListCallback = userListCallback;
     }
     catch (IOException e) {
       System.err.println("Failed to send list request");
@@ -298,11 +307,16 @@ public class Client {
           case Message.list:
             assert state == State.List;
             int n = fromServer.readInt();
+            String[] users = new String[n];
             for (int i = 0; i < n; i++) {
-              System.out.println(fromServer.readUTF());
+              users[i] = fromServer.readUTF();
+              System.out.println(users[i]);
             }
             state = State.Online;
             response.signal();
+            if (userListCallback != null) {
+              userListCallback.run(users);
+            }
             break;
           case Message.count:
             assert state == State.Count;
@@ -347,7 +361,7 @@ public class Client {
           inst.logout();
           break;
         case Message.list:
-          inst.list();
+          inst.list(null);
           break;
       }
 

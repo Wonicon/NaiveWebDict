@@ -94,9 +94,7 @@ class Session implements Runnable {
           this.username = username;
           state = State.ONLINE;
           Server.sessionsLock.lock();
-          for (Session s : Server.sessions) {
-            s.notifyLogin(username);
-          }
+          Server.sessions.forEach((s)->s.notifyLogin(username));
           Server.sessions.add(this);
           Server.sessionsLock.unlock();
         }
@@ -160,10 +158,20 @@ class Session implements Runnable {
       int uid = fromClient.readInt();
       int dict = fromClient.readInt();
       Server.db.likeWord(word, uid, dict);
+    }
+    catch (IOException e) {
+      System.err.println(e.toString());
+    }
+
+    outLock.lock();
+    try {
       toClient.writeUTF(Message.like);
     }
     catch (IOException e) {
       System.err.println(e.toString());
+    }
+    finally {
+      outLock.unlock();
     }
   }
 

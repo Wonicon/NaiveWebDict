@@ -6,9 +6,10 @@
 <?import javafx.scene.control.ListView?>
 <GridPane fx:controller="GUI.MainController" xmlns:fx="http://javafx.com/fxml" hgap="10" vgap="10">
     <VBox maxWidth="Infinity" GridPane.hgrow="ALWAYS">
-        <HBox>
+        <HBox spacing="10">
             <Button text="logout" onAction="#logout" />
             <Button text="query" onAction="#count" />
+            <Button text="list" onAction="#list" />
         </HBox>
 
         <TextField fx:id="word" promptText="type a word" />

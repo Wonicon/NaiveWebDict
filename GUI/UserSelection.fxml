@@ -1,0 +1,8 @@
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.Button?>
+<VBox fx:id="root" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GUI.UserSelection">
+    <ListView fx:id="userListView">
+    </ListView>
+    <Button fx:id="send" text="send"/>
+</VBox>
