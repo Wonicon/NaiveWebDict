@@ -32,3 +32,12 @@ create table user_like (
     foreign key (uid) references user(uid),
     foreign key (dict_id) references dict(dict_id)
 );
+
+create table word_card (
+    card_id int not null auto_increment,
+    sender varchar(20) not null,
+    receiver varchar(20) not null,
+    content varchar(500) not null,
+    received boolean not null,
+    primary key (card_id)
+);

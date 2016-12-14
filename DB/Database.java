@@ -195,4 +195,36 @@ public class Database {
     }
     return result;
   }
+
+  public boolean insertWordCard(String sender, String receiver, String content) {
+    boolean result = false;
+    try (
+        Connection conn = DriverManager.getConnection(url, user, control_password);
+        Statement stmt = conn.createStatement()
+    ) {
+      stmt.executeUpdate(String.format(
+          "insert into word_card (sender, receiver, content, received) values ('%s', '%s', '%s', false);",
+          sender, receiver, content));
+      stmt.close();
+      conn.close();
+      result = true;
+    }
+    catch (SQLException e) {
+      System.err.println(e.toString());
+    }
+    return result;
+  }
+
+  public ResultSet getUnreceivedWordCard(String receiver) throws SQLException {
+    String sql = String.format("select * from word_card where receiver='%s' and received=false", receiver);
+    Connection conn = DriverManager.getConnection(url, user, control_password);
+    Statement stmt = conn.createStatement();
+    ResultSet rs = stmt.executeQuery(sql);
+    if(rs.next()) {
+      return rs;//有结果返回结果
+    }
+    else {
+      return null;//没结果有的时候mysql会返回奇怪的东西所以这里手动返回null
+    }
+  }
 }
