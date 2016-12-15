@@ -9,7 +9,6 @@
         <HBox spacing="10">
             <Button text="logout" onAction="#logout" />
             <Button text="query" onAction="#count" />
-            <Button text="list" onAction="#list" />
             <Button fx:id="msg" text="msg" onAction="#showMsg" />
         </HBox>
 
@@ -18,6 +17,6 @@
         <HBox fx:id="dictSel">
         </HBox>
 
-        <ListView fx:id="wordCardList" visible="false" />
+        <ListView fx:id="wordCardList" visible="false" onMouseClicked="#onMouseClicked"/>
     </VBox>
 </GridPane>

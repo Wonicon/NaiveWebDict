@@ -24,6 +24,19 @@ public class UserSelectionController {
   public Button send;
 
   /**
+   * The message content to send.
+   */
+  private String content;
+
+  /**
+   * Set the message content.
+   * @param content The content generated from wordCardList.
+   */
+  public void setContent(String content) {
+    this.content = content;
+  }
+
+  /**
    * Set user list to display.
    * @param users Users to display.
    */
@@ -41,7 +54,7 @@ public class UserSelectionController {
   public void send(ActionEvent actionEvent) {
     ObservableList<String> items = userListView.getSelectionModel().getSelectedItems();
     if (items.size() > 0) {
-      App.model.send(items.get(0), "hello world");
+      App.model.send(items.get(0), content);
     }
     else {
       System.out.println("Select a user");

@@ -166,4 +166,9 @@ class WordCard {
     setCount(Integer.parseInt(getController().likeCount.getText()) + (prefer ? 1 : -1), prefer);
     list.sort((l, r) -> r.getCount() - l.getCount());
   }
+
+  @Override
+  public String toString() {
+    return dict.toString();
+  }
 }

@@ -12,6 +12,8 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.stage.*;
 import javafx.event.ActionEvent;
@@ -48,6 +50,8 @@ public class MainController {
   public void initialize() {
     observeWordCards = FXCollections.observableArrayList();
     wordCardList.setItems(observeWordCards);
+    // Allow multiple selection, then user can select multiple card to send.
+    wordCardList.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 
     // Render the cell as the WordCard.fxml describes.
     wordCardList.setCellFactory(list -> new ListCell<WordCard>(){
@@ -125,25 +129,35 @@ public class MainController {
 
   @FXML
   public void list(ActionEvent ev) {
-    App.model.list(users -> Platform.runLater(() -> {
-      Stage popup = new Stage();
-      FXMLLoader fxml = new FXMLLoader(getClass().getResource("UserSelection.fxml"));
-      try {
-        fxml.load();
-      }
-      catch (IOException e) {
-        e.printStackTrace();
-      }
-      ((UserSelectionController)fxml.getController()).setUserList(users);
-      popup.setScene(new Scene(fxml.getRoot()));
-      popup.initOwner(((Node)ev.getTarget()).getScene().getWindow());
-      popup.initModality(Modality.APPLICATION_MODAL);
-      popup.show();
-    }));
   }
 
   @FXML
   public void showMsg(ActionEvent actionEvent) {
     msgController.show(((Node)actionEvent.getTarget()).getScene().getWindow());
+  }
+
+  @FXML
+  public void onMouseClicked(MouseEvent mouseEvent) {
+    if (mouseEvent.getButton() == MouseButton.SECONDARY) {
+      StringBuilder builder = new StringBuilder();
+      wordCardList.getSelectionModel().getSelectedItems().forEach(builder::append);
+
+      App.model.list(users -> Platform.runLater(() -> {
+        Stage popup = new Stage();
+        FXMLLoader fxml = new FXMLLoader(getClass().getResource("UserSelection.fxml"));
+        try {
+          fxml.load();
+        }
+        catch (IOException e) {
+          e.printStackTrace();
+        }
+        ((UserSelectionController)fxml.getController()).setUserList(users);
+        ((UserSelectionController)fxml.getController()).setContent(builder.toString());
+        popup.setScene(new Scene(fxml.getRoot()));
+        popup.initOwner(((Node)mouseEvent.getTarget()).getScene().getWindow());
+        popup.initModality(Modality.APPLICATION_MODAL);
+        popup.show();
+      }));
+    }
   }
 }
