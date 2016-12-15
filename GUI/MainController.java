@@ -102,6 +102,30 @@ public class MainController {
 
   @FXML
   public void count() {
+    // Check input
+    String input = word.getText();
+    for (char ch : input.toCharArray()) {
+      if (!Character.isLetter(ch)) {
+        Alert alert = new Alert(Alert.AlertType.WARNING);
+        alert.setTitle("Query");
+        alert.setHeaderText(null);
+        alert.setContentText("The input should be an english word");
+        alert.showAndWait();
+        word.clear();
+        return;
+      }
+    }
+
+    if (input.isEmpty()) {
+      Alert alert = new Alert(Alert.AlertType.WARNING);
+      alert.setTitle("Query");
+      alert.setHeaderText(null);
+      alert.setContentText("The input should not be empty");
+      alert.showAndWait();
+      return;
+    }
+
+    // Prepare for count
     wordCardList.setVisible(true);
     observeWordCards.clear();
     if (allowAll()) {
