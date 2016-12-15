@@ -87,7 +87,9 @@ public class MainController {
   @FXML
   void logout() {
     App.model.logout();
-    App.Window.setScene(App.Welcome);
+    observeWordCards.clear();
+    App.window.setScene(App.welcome);
+    App.window.sizeToScene();
   }
 
   private boolean allowAll() {
@@ -125,10 +127,6 @@ public class MainController {
           observeWordCards.sort((left, right) -> right.getCount() - left.getCount());
         })
     );
-  }
-
-  @FXML
-  public void list(ActionEvent ev) {
   }
 
   @FXML

@@ -10,26 +10,23 @@ import javafx.stage.Stage;
 public class App extends Application {
   static Client model = new Client();
 
-  static Stage Window;
+  static Stage window;
 
-  static Scene Welcome;
+  static Scene welcome;
 
-  static Scene Main;
+  static Scene mainScene;
 
   @Override
   public void start(Stage primaryStage) throws Exception {
-    Welcome = new Scene(FXMLLoader.load(getClass().getResource("Welcome.fxml")), 300, 275);
-    Main = new Scene(FXMLLoader.load(getClass().getResource("Main.fxml")), 300, 275);
-    Window = primaryStage;
+    window = primaryStage;
+    welcome = new Scene(FXMLLoader.load(getClass().getResource("Welcome.fxml")), 300, 275);
+    mainScene = new Scene(FXMLLoader.load(getClass().getResource("Main.fxml")), 600, 400);
 
     primaryStage.setTitle("Web Dict");
-    primaryStage.setScene(Welcome);
+    primaryStage.setScene(welcome);
 
     // Stop the thread, exit completely.
-    primaryStage.setOnCloseRequest(e -> {
-      model.stop();
-      System.out.println("Stop the model");
-    });
+    primaryStage.setOnCloseRequest(e -> model.stop());
 
     primaryStage.show();
   }

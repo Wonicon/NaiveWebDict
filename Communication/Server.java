@@ -17,6 +17,9 @@ public class Server {
    */
   static Lock sessionsLock = new ReentrantLock();
 
+  /**
+   * The database.
+   */
   static DB.Database db;
 
   /**
@@ -26,6 +29,7 @@ public class Server {
 
   public static void main(String[] args) throws Exception {
     db = new DB.Database(args[0], args[1]);
+    db.clearLoginState();
     ServerSocket socket = new ServerSocket(8000);
     while (!socket.isClosed()) {
       System.out.println("wait connection");

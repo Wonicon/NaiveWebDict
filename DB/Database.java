@@ -204,4 +204,14 @@ public class Database {
     }
     return users.toArray(new String[users.size()]);
   });}
+
+  /**
+   * Clear the login state when server start.
+   * If a server is crushed or shutdown, the login state for users remains no meaning.
+   */
+  public void clearLoginState() { sqlContext(0, stmt -> {
+    int n = stmt.executeUpdate("update user set login=false");
+    System.out.println("clear " + n + " users' login state");
+    return n;
+  });}
 }
