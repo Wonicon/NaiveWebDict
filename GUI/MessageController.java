@@ -102,6 +102,7 @@ public class MessageController {
       WordCardMessage msg = msgListView.getSelectionModel().getSelectedItem();
       remove(msg);
       App.model.confirm(msg.getId());
+      new WordCardImage(msg.getContent()).display();
     }
   }
 }
