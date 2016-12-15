@@ -10,7 +10,7 @@ public class Database {
 
   private final static String database = "DICT";
 
-  private final static String url = "jdbc:mysql://localhost:3306/" + database;
+  private final static String url = "jdbc:mysql://localhost:3306/" + database + "?useUnicode=yes&characterEncoding=UTF-8";
 
   private String user = null;
 
@@ -173,7 +173,7 @@ public class Database {
 
   public void insertWordCard(String sender, String receiver, String content) { sqlContext(0, stmt ->
       stmt.executeUpdate("insert into word_card (sender, receiver, content, received)"
-            + "values ('" + sender + "','" + receiver + "','" + content + "', false)")
+          + "values ('" + sender + "','" + receiver + "','" + content + "', false)")
   );}
 
   public ArrayList<WordCardMessage> getUnreceivedWordCard(String receiver) {

@@ -1,4 +1,4 @@
-create database DICT;
+create database DICT character set utf8mb4 collate utf8mb4_unicode_ci;
 use DICT;
 
 create table user (
@@ -37,7 +37,9 @@ create table word_card (
     card_id int not null auto_increment,
     sender varchar(20) not null,
     receiver varchar(20) not null,
-    content varchar(500) not null,
+    content varchar(1024) not null,
     received boolean not null,
     primary key (card_id)
 );
+
+insert into dict (dict_name) values ('Bing'), ('Baidu'), ('NetEase');
