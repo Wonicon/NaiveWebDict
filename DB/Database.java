@@ -142,7 +142,6 @@ public class Database {
     int[] counts = new int[dictID.length];
     for (int i = 0; i < dictID.length; i++) {
       String sql = "select count from count where word='" + word + "' and dict_id=" + dictID[i];
-      System.out.println(sql);
       try (ResultSet rs = stmt.executeQuery(sql)) {
         if (rs.next()) {
           counts[i] = rs.getInt("count");
@@ -151,7 +150,7 @@ public class Database {
           }
         }
         else {
-          System.err.println("dict id " + dictID[i] + " not found");
+          System.out.println("Not found like count for " + word + " from dict " + dictID[i]);
           counts[i] = 0;
         }
       }
@@ -191,5 +190,18 @@ public class Database {
   public void confirmReceived(int cardID) { sqlContext(false, stmt -> {
     stmt.executeUpdate("update word_card set received=true where card_id=" + cardID);
     return true;
+  });}
+
+  /**
+   * Retrieve all registered users' username.
+   * @return An array of username.
+   */
+  public String[] getAllUsers() { return sqlContext(null, stmt -> {
+    ArrayList<String> users = new ArrayList<>();
+    ResultSet rs = stmt.executeQuery("select username from user");
+    while (rs.next()) {
+      users.add(rs.getString(1));
+    }
+    return users.toArray(new String[users.size()]);
   });}
 }

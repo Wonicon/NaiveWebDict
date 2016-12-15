@@ -1,4 +1,4 @@
-create database DICT character set utf8mb4 collate utf8mb4_unicode_ci;
+-- Run as the account assigned to this Application
 use DICT;
 
 create table user (
@@ -8,7 +8,6 @@ create table user (
     uid int not null auto_increment,
     primary key (uid)
 );
-
 
 create table dict (
     dict_name varchar(20) not null,

@@ -1,10 +1,12 @@
 package GUI;
 
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.ListView;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.layout.VBox;
@@ -22,6 +24,12 @@ public class UserSelectionController {
 
   @FXML
   public Button send;
+
+  @FXML
+  public Button refresh;
+
+  @FXML
+  public CheckBox includeOffline;
 
   /**
    * The message content to send.
@@ -61,5 +69,9 @@ public class UserSelectionController {
     }
 
     ((Stage)root.getScene().getWindow()).close();
+  }
+
+  public void refresh(ActionEvent actionEvent) {
+    App.model.list(includeOffline.isSelected(), users -> Platform.runLater(() -> setUserList(users)));
   }
 }

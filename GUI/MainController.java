@@ -142,7 +142,7 @@ public class MainController {
       StringBuilder builder = new StringBuilder();
       wordCardList.getSelectionModel().getSelectedItems().forEach(builder::append);
 
-      App.model.list(users -> Platform.runLater(() -> {
+      App.model.list(false, users -> Platform.runLater(() -> {
         Stage popup = new Stage();
         FXMLLoader fxml = new FXMLLoader(getClass().getResource("UserSelection.fxml"));
         try {

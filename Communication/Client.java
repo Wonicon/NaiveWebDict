@@ -6,6 +6,7 @@ import java.io.ObjectOutputStream;
 import java.io.ObjectInputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.LinkedList;
 import java.util.Scanner;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
@@ -14,7 +15,9 @@ import java.util.concurrent.locks.ReentrantLock;
 public class Client {
   private String username = "";
 
-  public String getUsername() { return username; }
+  public String getUsername() {
+    return username;
+  }
 
   private int uid = 0;
 
@@ -44,7 +47,7 @@ public class Client {
     void handle(WordCardMessage msg);
   }
 
-  NotifySendHandler notifySendHandler;
+  private NotifySendHandler notifySendHandler;
 
   public void setNotifySendHandler(NotifySendHandler handler) {
     notifySendHandler = handler;
@@ -69,7 +72,7 @@ public class Client {
     void run(String[] users);
   }
 
-  private UserListCallback userListCallback = null;
+  private LinkedList<UserListCallback> userListCallbackQueue = new LinkedList<>();
 
   /**
    * The global connection socket.
@@ -209,14 +212,16 @@ public class Client {
 
   /**
    * Request online user list.
-   * @param userListCallback
+   * @param all Whether to include offline users.
+   * @param userListCallback The handler receiving the user list.
    */
-  public void list(UserListCallback userListCallback) {
+  public void list(boolean all, UserListCallback userListCallback) {
     stateLock.lock();
     try {
       toServer.writeUTF(Message.list);
+      toServer.writeBoolean(all);
       state = State.List;
-      this.userListCallback = userListCallback;
+      userListCallbackQueue.add(userListCallback);
     }
     catch (IOException e) {
       System.err.println("Failed to send list request");
@@ -341,14 +346,12 @@ public class Client {
             break;
           // Handle response message.
           case Message.register:
-            assert state == State.Register;
             boolean result = fromServer.readBoolean();
             System.out.println("registered: " + result);
             state = State.Start;
             response.signal();
             break;
           case Message.login:
-            assert state == State.Login;
             uid = fromServer.readInt();
             if (uid > 0) {
               System.out.println("login as " + username);
@@ -365,26 +368,20 @@ public class Client {
             response.signal();
             break;
           case Message.logout:
-            assert state == State.Logout;
             state = State.Start;
             response.signal();
             break;
           case Message.list:
-            assert state == State.List;
             int n = fromServer.readInt();
             String[] users = new String[n];
             for (int i = 0; i < n; i++) {
               users[i] = fromServer.readUTF();
-              System.out.println(users[i]);
             }
             state = State.Online;
+            userListCallbackQueue.pop().run(users);
             response.signal();
-            if (userListCallback != null) {
-              userListCallback.run(users);
-            }
             break;
           case Message.count:
-            assert state == State.Count;
             int[] counts = new int[fromServer.readInt()];
             for (int i = 0; i < counts.length; i++) {
               counts[i] = fromServer.readInt();
@@ -429,7 +426,7 @@ public class Client {
           inst.logout();
           break;
         case Message.list:
-          inst.list(null);
+          inst.list(false, null);
           break;
       }
 

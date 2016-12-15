@@ -243,9 +243,23 @@ class Session implements Runnable {
   }
 
   private void list() {
-    Server.sessionsLock.lock();
-    String[] list = getOnlineList();
-    Server.sessionsLock.unlock();
+    boolean all = false;
+    try {
+      all = fromClient.readBoolean();
+    }
+    catch (IOException e) {
+      System.out.println(e.toString());
+    }
+
+    String[] list;
+    if (all) {
+      list = Server.db.getAllUsers();
+    }
+    else {
+      Server.sessionsLock.lock();
+      list = getOnlineList();
+      Server.sessionsLock.unlock();
+    }
 
     outLock.lock();
     try {
