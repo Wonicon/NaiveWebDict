@@ -74,6 +74,13 @@ public class Client {
 
   private LinkedList<UserListCallback> userListCallbackQueue = new LinkedList<>();
 
+  @FunctionalInterface
+  public interface RegisterCallback {
+    void handle(boolean success);
+  }
+
+  private LinkedList<RegisterCallback> registerCallbackQueue = new LinkedList<>();
+
   /**
    * The global connection socket.
    */
@@ -134,11 +141,11 @@ public class Client {
 
   /**
    * Register an account. Auto login.
-   *
-   * @param username Username
+   *  @param username Username
    * @param password Password
+   * @param callback
    */
-  public void register(String username, String password) {
+  public void register(String username, String password, RegisterCallback callback) {
     stateLock.lock();
     try {
       if (state == State.Start) {
@@ -146,6 +153,7 @@ public class Client {
         toServer.writeUTF(username);
         toServer.writeUTF(password);
         state = State.Register;
+        registerCallbackQueue.add(callback);
       }
       else {
         System.out.println("No need to register");
@@ -349,6 +357,10 @@ public class Client {
             boolean result = fromServer.readBoolean();
             System.out.println("registered: " + result);
             state = State.Start;
+            RegisterCallback handler;
+            if (!registerCallbackQueue.isEmpty() && (handler = registerCallbackQueue.pop()) != null) {
+              handler.handle(result);
+            }
             response.signal();
             break;
           case Message.login:
@@ -417,7 +429,7 @@ public class Client {
       // Route to different request sender.
       switch (cmd) {
         case Message.register:
-          inst.register(arg[1], arg[2]);
+          inst.register(arg[1], arg[2], null);
           break;
         case Message.login:
           inst.login(arg[1], arg[2], null);

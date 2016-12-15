@@ -1,6 +1,8 @@
 package GUI;
 
 import javafx.embed.swing.SwingFXUtils;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.control.Button;
@@ -31,7 +33,11 @@ class WordCardImage {
     vbox = new VBox(label);
     Button btn = new Button("save");
     btn.setOnAction(e -> save());
-    Scene scene = new Scene(new VBox(vbox, btn));
+    VBox root = new VBox(vbox, btn);
+    root.setSpacing(10);
+    root.setPadding(new Insets(10, 10, 10, 10));
+    root.setAlignment(Pos.CENTER);
+    Scene scene = new Scene(root);
     stage = new Stage();
     stage.setScene(scene);
   }

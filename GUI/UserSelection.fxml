@@ -5,10 +5,11 @@
 <?import javafx.scene.control.CheckBox?>
 <?import javafx.geometry.Insets?>
 <VBox fx:id="root" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GUI.UserSelectionController">
+    <padding><Insets top="10" right="10" bottom="10" left="10"/></padding>
     <ListView fx:id="userListView">
     </ListView>
     <HBox spacing="10" alignment="BASELINE_CENTER">
-        <padding><Insets top="10" right="10" bottom="10" left="10"/></padding>
+        <padding><Insets top="10" /></padding>
         <Button fx:id="send" text="send" onAction="#send"/>
         <Button fx:id="refresh" text="refresh" onAction="#refresh"/>
         <CheckBox fx:id="includeOffline" text="include offline users"/>
