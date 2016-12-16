@@ -265,9 +265,11 @@ class Session implements Runnable {
     try {
       // Send online user list
       toClient.writeUTF(Message.list);
-      toClient.writeInt(list.length);
+      toClient.writeInt(list.length - 1);
       for (String user : list) {
-        toClient.writeUTF(user);
+        if (!getUsername().equals(user)) {
+          toClient.writeUTF(user);
+        }
       }
     }
     catch (IOException e) {
