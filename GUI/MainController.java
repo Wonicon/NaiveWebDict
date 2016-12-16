@@ -38,6 +38,8 @@ public class MainController {
 
   private ObservableList<WordCard> observeWordCards;
 
+  private ContextMenu menuOnWordCard;
+
   @FXML
   private ListView<WordCard> wordCardList;
 
@@ -62,6 +64,12 @@ public class MainController {
         setText(null);
       }
     });
+
+    // Setting the context menu shown on right clicking the word card.
+    menuOnWordCard = new ContextMenu();
+    final MenuItem shareItem = new MenuItem("Share");
+    shareItem.setOnAction(e -> showUserListWindow(menuOnWordCard));
+    menuOnWordCard.getItems().add(shareItem);
 
     // Add checkboxes representing the dictionaries.
     for (WordCard card : wordCards) {
@@ -159,27 +167,31 @@ public class MainController {
   }
 
   @FXML
-  public void onMouseClicked(MouseEvent mouseEvent) {
-    if (mouseEvent.getButton() == MouseButton.SECONDARY) {
-      StringBuilder builder = new StringBuilder();
-      wordCardList.getSelectionModel().getSelectedItems().forEach(builder::append);
-
-      App.model.list(false, users -> Platform.runLater(() -> {
-        Stage popup = new Stage();
-        FXMLLoader fxml = new FXMLLoader(getClass().getResource("UserSelection.fxml"));
-        try {
-          fxml.load();
-        }
-        catch (IOException e) {
-          e.printStackTrace();
-        }
-        ((UserSelectionController)fxml.getController()).setUserList(users);
-        ((UserSelectionController)fxml.getController()).setContent(builder.toString());
-        popup.setScene(new Scene(fxml.getRoot()));
-        popup.initOwner(((Node)mouseEvent.getTarget()).getScene().getWindow());
-        popup.initModality(Modality.APPLICATION_MODAL);
-        popup.show();
-      }));
+  public void onMouseClicked(MouseEvent e) {
+    if (e.getButton() == MouseButton.SECONDARY && wordCardList.getItems().size() > 0) {
+      menuOnWordCard.show(((Node)e.getTarget()).getParent(), e.getScreenX(), e.getScreenY());
     }
+  }
+
+  private void showUserListWindow(Window owner) {
+    StringBuilder builder = new StringBuilder();
+    wordCardList.getSelectionModel().getSelectedItems().forEach(builder::append);
+
+    App.model.list(false, users -> Platform.runLater(() -> {
+      Stage popup = new Stage();
+      FXMLLoader fxml = new FXMLLoader(getClass().getResource("UserSelection.fxml"));
+      try {
+        fxml.load();
+      }
+      catch (IOException e) {
+        e.printStackTrace();
+      }
+      ((UserSelectionController)fxml.getController()).setUserList(users);
+      ((UserSelectionController)fxml.getController()).setContent(builder.toString());
+      popup.setScene(new Scene(fxml.getRoot()));
+      popup.initOwner(owner);
+      popup.initModality(Modality.APPLICATION_MODAL);
+      popup.show();
+    }));
   }
 }

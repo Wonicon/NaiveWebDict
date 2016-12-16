@@ -71,6 +71,7 @@ public class UserSelectionController {
     ((Stage)root.getScene().getWindow()).close();
   }
 
+  @FXML
   public void refresh(ActionEvent actionEvent) {
     App.model.list(includeOffline.isSelected(), users -> Platform.runLater(() -> setUserList(users)));
   }
