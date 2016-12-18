@@ -297,7 +297,7 @@ class Session implements Runnable {
     try {
       for (Session s : Server.sessions) {
         if (s.getUsername().equals(msg.getReceiver())) {
-          Server.db.getUnreceivedWordCard(msg.getReceiver()).forEach(this::notifySend);
+          Server.db.getUnreceivedWordCard(msg.getReceiver()).forEach(s::notifySend);
           break;
         }
       }
