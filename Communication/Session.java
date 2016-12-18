@@ -353,6 +353,9 @@ class Session implements Runnable {
     catch (Exception e) {
       e.printStackTrace();
     }
+    finally {
+      outLock.unlock();
+    }
   }
 
   @Override
