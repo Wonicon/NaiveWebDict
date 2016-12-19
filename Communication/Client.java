@@ -34,11 +34,13 @@ public class Client {
 
     // It is practical to stop the listener thread by close the socket.
     // As it might stall on read from stream, the loop boolean value may not work.
-    try {
-      socket.close();
-    }
-    catch (IOException e) {
-      System.err.println(e.toString());
+    if (socket != null) {
+      try {
+        socket.close();
+      }
+      catch (IOException e) {
+        System.err.println(e.toString());
+      }
     }
   }
 
@@ -123,20 +125,19 @@ public class Client {
    * Connect to server while starting.
    * And create the listening thread.
    */
-  public Client() {
+  public Client(String host, int port) {
     // Establish connection and create stream.
     try {
-      socket = new Socket("localhost", 8000);
+      socket = new Socket(host, port);
       fromServer = new DataInputStream(socket.getInputStream());
       toServer = new DataOutputStream(socket.getOutputStream());
       objToServer = new ObjectOutputStream(socket.getOutputStream());
       objFromServer = new ObjectInputStream(socket.getInputStream());
+      new Thread(this::serverMsgHandler).start();
     }
     catch (IOException e) {
       System.err.println("Connection failed");
     }
-
-    new Thread(this::serverMsgHandler).start();
   }
 
   /**
@@ -418,7 +419,7 @@ public class Client {
   }
 
   public static void main(String[] args) throws Exception {
-    Client inst = new Client();
+    Client inst = new Client("localhost", 8000);
 
     System.out.print(inst.username + "> ");
     Scanner input = new Scanner(System.in);

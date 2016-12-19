@@ -8,7 +8,7 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 public class App extends Application {
-  static Client model = new Client();
+  static Client model;
 
   static Stage window;
 
@@ -26,13 +26,18 @@ public class App extends Application {
     primaryStage.setScene(welcome);
 
     // Stop the thread, exit completely.
-    primaryStage.setOnCloseRequest(e -> model.stop());
+    primaryStage.setOnCloseRequest(e -> {
+      if (model != null) {
+        model.stop();
+      }
+    });
 
     primaryStage.show();
   }
 
 
   public static void main(String[] args) {
+    model = new Client(args[0], Integer.parseInt(args[1]));
     launch(args);
   }
 }
