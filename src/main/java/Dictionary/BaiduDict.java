@@ -22,6 +22,6 @@ public class BaiduDict extends Dict {
 
   @Override
   protected Definition parseDef(Element li) {
-    return new Definition(li.child(0).text(), li.child(1).text());
+    return new Definition(li.child(0).text(), li.child(1).text().split("；"));
   }
 }

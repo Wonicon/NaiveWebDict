@@ -26,10 +26,10 @@ public class NetEaseDict extends Dict {
   protected Definition parseDef(Element li) {
     String[] s = li.text().split(" ", 2);
     if (s.length == 2) {
-      return new Definition(s[0], s[1]);
+      return new Definition(s[0], s[1].split("；"));
     }
     else {
-      return new Definition("", s[0]);
+      return new Definition("", s[0].split("；"));
     }
   }
 }

@@ -72,7 +72,7 @@ public abstract class Dict implements Runnable {
     StringBuilder sb = new StringBuilder(word + " (" + getSource() + ", " + getTime() + "s)\n");
     if (definitions != null) {
       for (Definition def : definitions) {
-        sb.append(def.getPos()).append(" ").append(def.getDef()).append("\n");
+        sb.append(def.getPos()).append(" ").append(String.join("；", def.getDefs())).append("\n");
       }
     }
     else {

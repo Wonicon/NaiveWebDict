@@ -12,18 +12,18 @@ public class Definition {
   /**
    * The definition.
    */
-  private String def;
+  private String[] defs;
 
-  public Definition(String pos, String def) {
+  public Definition(String pos, String[] defs) {
     this.pos = pos;
-    this.def = def;
+    this.defs = defs;
   }
 
   public String getPos() {
     return pos;
   }
 
-  public String getDef() {
-    return def;
+  public String[] getDefs() {
+    return defs;
   }
 }
