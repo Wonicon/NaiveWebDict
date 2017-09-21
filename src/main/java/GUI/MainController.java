@@ -58,6 +58,8 @@ public class MainController {
 
     App.dictAdapter.setWord(word.getText());
     App.dictAdapter.run();
+    group.getToggles().clear();
+    defList.getChildren().clear();
     for (Definition def: App.dictAdapter.getDefinitions()) {
       HBox hBox = new HBox();
       hBox.setAlignment(Pos.BASELINE_LEFT);
@@ -97,7 +99,6 @@ public class MainController {
     word.clear();
     defList.getChildren().clear();
     sentence.clear();
-    group.getToggles().clear();
   }
 
   @FXML
