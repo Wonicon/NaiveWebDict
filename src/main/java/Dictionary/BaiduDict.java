@@ -24,11 +24,4 @@ public class BaiduDict extends Dict {
   protected Definition parseDef(Element li) {
     return new Definition(li.child(0).text(), li.child(1).text());
   }
-
-  public static void main(String[] args) {
-    Dict a = new BaiduDict();
-    a.setWord("hello");
-    a.query();
-    System.out.println(a);
-  }
 }

@@ -1,6 +1,5 @@
 package Dictionary;
 
-import jdk.nashorn.internal.objects.annotations.Function;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
