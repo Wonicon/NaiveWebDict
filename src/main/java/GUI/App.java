@@ -1,34 +1,35 @@
 package GUI;
 
-import Communication.Client;
+import Dictionary.BingDict;
+import Dictionary.Dict;
+import Glossary.GlossaryCSV;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
+import java.time.*;
+
 public class App extends Application {
-  static Client model;
+  static GlossaryCSV model;
+
+  static Dict dictAdapter = new BingDict();
 
   static Stage window;
-
-  static Scene welcome;
-
-  static Scene mainScene;
 
   @Override
   public void start(Stage primaryStage) throws Exception {
     window = primaryStage;
-    welcome = new Scene(FXMLLoader.load(getClass().getResource("Welcome.fxml")), 300, 275);
-    mainScene = new Scene(FXMLLoader.load(getClass().getResource("Main.fxml")), 600, 400);
+    Scene mainScene = new Scene(FXMLLoader.load(getClass().getResource("Main.fxml")), 600, 400);
 
     primaryStage.setTitle("Web Dict");
-    primaryStage.setScene(welcome);
+    primaryStage.setScene(mainScene);
 
     // Stop the thread, exit completely.
     primaryStage.setOnCloseRequest(e -> {
-      if (model != null) {
-        model.stop();
+      if (!model.isSaved()) {
+        model.export("backup_" + LocalDateTime.now().toString());
       }
     });
 
@@ -37,7 +38,7 @@ public class App extends Application {
 
 
   public static void main(String[] args) {
-    model = new Client(args[0], Integer.parseInt(args[1]));
+    model = new GlossaryCSV();
     launch(args);
   }
 }

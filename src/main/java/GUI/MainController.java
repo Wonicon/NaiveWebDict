@@ -1,115 +1,55 @@
 package GUI;
 
-import Dictionary.BaiduDict;
-import Dictionary.BingDict;
-import Dictionary.NetEaseDict;
+import Dictionary.Definition;
 
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.application.Platform;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Node;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.input.MouseButton;
-import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.HBox;
-import javafx.stage.*;
-import javafx.event.ActionEvent;
+import javafx.scene.layout.*;
+import javafx.stage.FileChooser;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 
+import java.io.File;
 import java.io.IOException;
 
 public class MainController {
   @FXML
-  public HBox dictSel;
+  public VBox defList;
 
   @FXML
-  public Button msg;
+  public TextField source;
+
+  @FXML
+  public TextField sentence;
 
   @FXML
   private TextField word;
 
-  private WordCard[] wordCards = {
-      new WordCard(1, new BingDict()),
-      new WordCard(2, new BaiduDict()),
-      new WordCard(3, new NetEaseDict()),
-  };
+  private ToggleGroup group = new ToggleGroup();
 
-  private ObservableList<WordCard> observeWordCards;
+  private Stage popup = new Stage();
 
-  private ContextMenu menuOnWordCard;
-
-  @FXML
-  private ListView<WordCard> wordCardList;
-
-  private MessageController msgController;
-
-  /**
-   * Add dynamic elements to the list view and other containers.
-   */
   @FXML
   public void initialize() {
-    observeWordCards = FXCollections.observableArrayList();
-    wordCardList.setItems(observeWordCards);
-    // Allow multiple selection, then user can select multiple card to send.
-    wordCardList.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-
-    // Render the cell as the WordCard.fxml describes.
-    wordCardList.setCellFactory(list -> new ListCell<WordCard>(){
-      @Override
-      public void updateItem(WordCard wordCard, boolean empty) {
-        super.updateItem(wordCard, empty);
-        setGraphic(empty ? null : wordCard.getRoot());
-        setText(null);
-      }
-    });
-
-    // Setting the context menu shown on right clicking the word card.
-    menuOnWordCard = new ContextMenu();
-    final MenuItem shareItem = new MenuItem("Share");
-    shareItem.setOnAction(e -> showUserListWindow(menuOnWordCard));
-    menuOnWordCard.getItems().add(shareItem);
-
-    // Add checkboxes representing the dictionaries.
-    for (WordCard card : wordCards) {
-      dictSel.getChildren().add(card.getCheckbox());
-      card.setList(observeWordCards);
-    }
-
+    popup.initModality(Modality.NONE);
+    popup.setTitle("Words Currently Added");
     try {
-      FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("Message.fxml"));
-      fxmlLoader.load();
-      msgController = fxmlLoader.getController();
-      msgController.setMainController(this);
-      App.model.setNotifySendHandler(w -> Platform.runLater(() -> {
-        msgController.add(w);
-        msg.setText("msg (new)");
-      }));
+      VBox vBox = FXMLLoader.load(getClass().getResource("CSV.fxml"));
+      Scene scene = new Scene(vBox);
+      popup.setScene(scene);
     }
     catch (IOException e) {
-      System.out.println(e.toString());
+      Alert alert = new Alert(Alert.AlertType.ERROR, e.toString());
+      alert.show();
     }
   }
 
   @FXML
-  void logout() {
-    App.model.logout();
-    observeWordCards.clear();
-    App.window.setScene(App.welcome);
-    App.window.sizeToScene();
-  }
-
-  private boolean allowAll() {
-    boolean r = true;
-    for (WordCard wordCard : wordCards) {
-      r = r && !wordCard.isEnable();
-    }
-    return r;
-  }
-
-  @FXML
-  public void count() {
+  public void query() {
     // Check input
     String input = word.getText();
     for (char ch : input.toCharArray()) {
@@ -133,65 +73,64 @@ public class MainController {
       return;
     }
 
-    // Prepare for count
-    wordCardList.setVisible(true);
-    observeWordCards.clear();
-    if (allowAll()) {
-      observeWordCards.addAll(wordCards);
+    App.dictAdapter.setWord(word.getText());
+    App.dictAdapter.run();
+    group.getToggles().clear();
+    for (Definition def: App.dictAdapter.getDefinitions()) {
+      HBox hBox = new HBox();
+      hBox.setAlignment(Pos.BASELINE_LEFT);
+      hBox.setSpacing(10);
+      hBox.getChildren().add(new Label(def.getPos()));
+      for (String detailedDef: def.getDefs()) {
+        ToggleButton tb = new ToggleButton(detailedDef);
+        hBox.getChildren().add(tb);
+        group.getToggles().add(tb);
+      }
+      defList.getChildren().add(hBox);
     }
-    else {
-      for (WordCard wordCard : wordCards) {
-        if (wordCard.isEnable()) {
-          observeWordCards.add(wordCard);
+  }
+
+  @FXML
+  public void add() {
+    ToggleButton tb = (ToggleButton)group.getSelectedToggle();
+    if (tb == null) {
+      Alert alert = new Alert(Alert.AlertType.WARNING, "Must select a definition!");
+      alert.show();
+      return;
+    }
+
+    String selectedDef = tb.getText();
+    // Find out pos
+    String pos = null;
+    for (Definition def: App.dictAdapter.getDefinitions()) {
+      for (String detailedDef: def.getDefs()) {
+        if (detailedDef.equals(selectedDef)) {
+          pos = def.getPos();
+          break;
         }
       }
     }
+    App.model.addEntry(App.dictAdapter.getWord(), pos, selectedDef, source.getText(), sentence.getText());
 
-    for (WordCard wordCard : wordCards) {
-      wordCard.query(word.getText());
-    }
-
-    App.model.count(word.getText(), observeWordCards.stream().mapToInt(WordCard::getId).toArray(),
-        counts -> Platform.runLater(() -> {
-          for (int i = 0; i < counts.length; i++) {
-            observeWordCards.get(i).setCount(counts[i] < 0 ? -counts[i] : counts[i], counts[i] < 0);
-          }
-          observeWordCards.sort((left, right) -> right.getCount() - left.getCount());
-        })
-    );
+    word.clear();
+    defList.getChildren().clear();
+    sentence.clear();
   }
 
   @FXML
-  public void showMsg(ActionEvent actionEvent) {
-    msgController.show(((Node)actionEvent.getTarget()).getScene().getWindow());
+  public void view() {
+    Label label = (Label) popup.getScene().getRoot().lookup("#content");
+    label.setText(App.model.view());
+    popup.show();
   }
 
   @FXML
-  public void onMouseClicked(MouseEvent e) {
-    if (e.getButton() == MouseButton.SECONDARY && wordCardList.getItems().size() > 0) {
-      menuOnWordCard.show(((Node)e.getTarget()).getParent(), e.getScreenX(), e.getScreenY());
+  public void export() {
+    FileChooser chooser = new FileChooser();
+    chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV File", "*.csv"));
+    File file = chooser.showSaveDialog(App.window);
+    if (file != null) {
+      App.model.export(file.getName());
     }
-  }
-
-  private void showUserListWindow(Window owner) {
-    StringBuilder builder = new StringBuilder();
-    wordCardList.getSelectionModel().getSelectedItems().forEach(builder::append);
-
-    App.model.list(false, users -> Platform.runLater(() -> {
-      Stage popup = new Stage();
-      FXMLLoader fxml = new FXMLLoader(getClass().getResource("UserSelection.fxml"));
-      try {
-        fxml.load();
-      }
-      catch (IOException e) {
-        e.printStackTrace();
-      }
-      ((UserSelectionController)fxml.getController()).setUserList(users);
-      ((UserSelectionController)fxml.getController()).setContent(builder.toString());
-      popup.setScene(new Scene(fxml.getRoot()));
-      popup.initOwner(owner);
-      popup.initModality(Modality.APPLICATION_MODAL);
-      popup.show();
-    }));
   }
 }

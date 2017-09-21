@@ -19,6 +19,10 @@ public abstract class Dict implements Runnable {
     return definitions[i];
   }
 
+  public Definition[] getDefinitions() {
+    return definitions;
+  }
+
   public void setWord(String s) {
     if (word == null || !s.equals(word)) {
       word = s;
