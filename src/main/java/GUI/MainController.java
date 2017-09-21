@@ -31,23 +31,6 @@ public class MainController {
 
   private ToggleGroup group = new ToggleGroup();
 
-  private Stage popup = new Stage();
-
-  @FXML
-  public void initialize() {
-    popup.initModality(Modality.NONE);
-    popup.setTitle("Words Currently Added");
-    try {
-      VBox vBox = FXMLLoader.load(getClass().getResource("CSV.fxml"));
-      Scene scene = new Scene(vBox);
-      popup.setScene(scene);
-    }
-    catch (IOException e) {
-      Alert alert = new Alert(Alert.AlertType.ERROR, e.toString());
-      alert.show();
-    }
-  }
-
   @FXML
   public void query() {
     // Check input
@@ -75,7 +58,6 @@ public class MainController {
 
     App.dictAdapter.setWord(word.getText());
     App.dictAdapter.run();
-    group.getToggles().clear();
     for (Definition def: App.dictAdapter.getDefinitions()) {
       HBox hBox = new HBox();
       hBox.setAlignment(Pos.BASELINE_LEFT);
@@ -115,13 +97,26 @@ public class MainController {
     word.clear();
     defList.getChildren().clear();
     sentence.clear();
+    group.getToggles().clear();
   }
 
   @FXML
   public void view() {
-    Label label = (Label) popup.getScene().getRoot().lookup("#content");
-    label.setText(App.model.view());
-    popup.show();
+    Stage popup = new Stage();
+    popup.initModality(Modality.APPLICATION_MODAL);
+    popup.setTitle("Words Currently Added");
+    try {
+      VBox vBox = FXMLLoader.load(getClass().getResource("CSV.fxml"));
+      Scene scene = new Scene(vBox);
+      popup.setScene(scene);
+      Label label = (Label) popup.getScene().getRoot().lookup("#content");
+      label.setText(App.model.view());
+      popup.show();
+    }
+    catch (IOException e) {
+      Alert alert = new Alert(Alert.AlertType.ERROR, e.toString());
+      alert.showAndWait();
+    }
   }
 
   @FXML

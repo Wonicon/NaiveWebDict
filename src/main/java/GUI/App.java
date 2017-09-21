@@ -12,7 +12,7 @@ import javafx.stage.Stage;
 import java.time.*;
 
 public class App extends Application {
-  static GlossaryCSV model;
+  static GlossaryCSV model = new GlossaryCSV();
 
   static Dict dictAdapter = new BingDict();
 
@@ -36,9 +36,7 @@ public class App extends Application {
     primaryStage.show();
   }
 
-
   public static void main(String[] args) {
-    model = new GlossaryCSV();
     launch(args);
   }
 }
